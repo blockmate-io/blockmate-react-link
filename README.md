@@ -1,4 +1,4 @@
-# react-blockmate-link
+# blockmate-react-link
 
 > Application to link external service to Blockmate Link app
 
