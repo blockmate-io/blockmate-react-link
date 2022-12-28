@@ -7,10 +7,11 @@
 ## Install
 
 ```bash
-add to your package.json
-"react-blockmate-link": "https://github.com/blockmate-io/blockmate-react-link"
+1/Add to your package.json in depencencies:
+"blockmate-react-link": "https://github.com/blockmate-io/blockmate-react-link"
 
-run npm i react-blockmate-link
+2/ run
+npm i blockmate-react-link
 ```
 
 ## Token
