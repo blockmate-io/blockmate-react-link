@@ -23,7 +23,7 @@ Application requires correct jwt token in order to connect. You can create a tok
 ```jsx
 import React from 'react'
 
-import { handleClose, handleOpen, LinkModal } from 'react-blockmate-link'
+import { handleClose, handleOpen, LinkModal } from 'blockmate-react-link'
 
 const App = () => (
     <>
