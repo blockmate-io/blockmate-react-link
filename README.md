@@ -6,35 +6,66 @@
 
 ## Install
 
-```bash
-1/Add to your package.json in depencencies:
-"blockmate-react-link": "https://github.com/blockmate-io/blockmate-react-link"
 
-2/ run
-npm i blockmate-react-link
-```
+1. Add to your package.json in depencencies:
+```"blockmate-react-link": "https://github.com/blockmate-io/blockmate-react-link"```
 
-## Token
+2. Run
+```npm i blockmate-react-link```
 
-Application requires correct jwt token in order to connect. You can create a token here: https://link-dev.blockmate.io/docs#/default/create_link_token_v1_link_link_token_post
+
+## JWT Token
+
+Application requires correct jwt token in order to be used.
+
+1. Get a `User JWT token` by Authentication of End-user from https://docs.blockmate.io/docs/quickstart
+
+2. In your Link component you can get a `linkToken` using `user_jwt_token` from the previous point.
 
 ## Usage
 
 ```jsx
-import React from 'react'
 
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { handleClose, handleOpen, LinkModal } from 'blockmate-react-link'
 
-const App = () => (
-    <>
-      <LinkModal jwt={'jwt'}/>
-      <div>Test APP</div>
-      <button onClick={handleOpen}>Open</button>
-    </>
-  )
+const YourConnectComponent = ({user_jwt_token}) => {
+    const [linkToken, setLinkToken] = useState(null);
 
-export default App
+ 
+    useEffect(() => {
+        axios.post(
+            "/v1/link/link/token",
+            {
+                "jwt": user_jwt_token,
+                "redirect_uri": ""
+            },
+            {
+                baseURL: "https://link.blockmate.io"
+            }
+        ).catch(e => {
+            console.log(e)
+        }).then(r => {
+            setLinkToken(r.data.link_token)
+        })
+    }, [user_jwt_token])
+
+ 
+
+    return (
+      <>
+        <LinkModal url="https://link.blockmate.io" jwt={linkToken} />
+        <div>Test APP</div>
+        <button onClick={handleOpen}>Open</button>
+      </>
+    )
+}
+
+ 
+export default YourConnectComponent
 ```
+
 
 ## License
 
