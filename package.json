@@ -4,7 +4,7 @@
   "description": "Application to link external service to Blockmate Link app",
   "author": "blockmate-io",
   "license": "MIT",
-  "repository": "michalwiejaqarbon/link",
+  "repository": "https://github.com/blockmate-io/blockmate-react-link",
   "main": "dist/index.js",
   "module": "dist/index.modern.js",
   "source": "src/index.js",
