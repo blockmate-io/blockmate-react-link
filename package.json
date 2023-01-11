@@ -1,10 +1,13 @@
 {
-  "name": "react-blockmate-link",
+  "name": "@blockmate.io/react-blockmate-link",
   "version": "1.0.0",
   "description": "Application to link external service to Blockmate Link app",
   "author": "blockmate-io",
   "license": "MIT",
-  "repository": "https://github.com/blockmate-io/blockmate-react-link",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/blockmate-io/blockmate-react-link.git"
+  },
   "main": "dist/index.js",
   "module": "dist/index.modern.js",
   "source": "src/index.js",
@@ -49,5 +52,20 @@
   },
   "files": [
     "dist"
+  ],
+  "bugs": {
+    "url": "https://github.com/blockmate-io/blockmate-react-link/issues"
+  },
+  "homepage": "https://github.com/blockmate-io/blockmate-react-link#readme",
+  "keywords": [
+    "blockmate",
+    "link",
+    "crypto",
+    "aisp",
+    "web3",
+    "api",
+    "personal",
+    "finance",
+    "management"
   ]
 }
