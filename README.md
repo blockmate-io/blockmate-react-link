@@ -6,12 +6,7 @@
 
 ## Install
 
-
-1. Add to your package.json in depencencies:
-```"blockmate-react-link": "https://github.com/blockmate-io/blockmate-react-link"```
-
-2. Run
-```npm i blockmate-react-link```
+Run ```npm i blockmate-react-link```
 
 
 ## JWT Token
