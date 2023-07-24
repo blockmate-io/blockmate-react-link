@@ -19,7 +19,7 @@ var LinkModal = function LinkModal(_ref) {
     url = _ref$url === void 0 ? 'https://link-dev.blockmate.io' : _ref$url;
   if (!jwt) return null;
   var body = document.querySelector('body');
-  var iframeStyle = 'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0';
+  var iframeStyle = 'display:block; position:fixed; width:500px; height:500px; z-index:100; border:none; top:0; right:0';
   var createIframe = function createIframe() {
     var iframe = document.createElement('iframe');
     iframe.setAttribute('src', url + "/?jwt=" + jwt);
