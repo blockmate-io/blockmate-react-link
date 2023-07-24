@@ -17,7 +17,7 @@ export const LinkModal = ({ jwt, url = 'https://link-dev.blockmate.io' }) => {
   const body = document.querySelector('body')
 
   const iframeStyle =
-    'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0'
+    'display:block; position:fixed; width:500px; height:500px; z-index:100; border:none; top:0; right:0'
 
   const createIframe = () => {
     const iframe = document.createElement('iframe')
