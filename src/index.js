@@ -1,4 +1,4 @@
-export const handleOpen = (event = 'linkConnect') => {
+export const handleOpen = (event) => {
   if (!Object.keys(EVENT_MESSAGES).includes(event)) {
     event = 'linkConnect'
   }
@@ -24,7 +24,7 @@ export const LinkModal = (jwt) => {
   const body = document.querySelector('body')
 
   const iframeStyle =
-    'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0%; right:0'
+    'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0'
 
   const createIframe = (url) => {
     const iframe = document.createElement('iframe')
@@ -43,23 +43,12 @@ export const LinkModal = (jwt) => {
   }
 
   window.onmessage = function (event) {
-    if (event?.data?.type === EVENT_MESSAGES.close) {
-      removeIframe(event)
-    }
-    if (event?.data?.type === EVENT_MESSAGES.linkConnect) {
-      createIframe(EVENT_MESSAGES.linkConnect)
-    }
-    if (event?.data?.type === EVENT_MESSAGES.verifyPhone) {
-      createIframe(EVENT_MESSAGES.verifyPhone)
-    }
-    if (event?.data?.type === EVENT_MESSAGES.changePhone) {
-      createIframe(EVENT_MESSAGES.changePhone)
-    }
-    if (event?.data?.type === EVENT_MESSAGES.enableTransfer) {
-      createIframe(EVENT_MESSAGES.enableTransfer)
-    }
-    if (event?.data?.type === EVENT_MESSAGES.transferAssets) {
-      createIframe(EVENT_MESSAGES.transferAssets)
+    if (Object.values(EVENT_MESSAGES).includes(event.data.type)) {
+      if (event?.data?.type === EVENT_MESSAGES.close) {
+        removeIframe(event)
+      } else {
+        createIframe(event.data.type)
+      }
     }
   }
 
