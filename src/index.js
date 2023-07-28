@@ -43,12 +43,13 @@ export const LinkModal = (jwt) => {
   }
 
   window.onmessage = function (event) {
-    if (Object.values(EVENT_MESSAGES).includes(event.data.type)) {
-      if (event?.data?.type === EVENT_MESSAGES.close) {
-        removeIframe(event)
-      } else {
-        createIframe(event.data.type)
-      }
+    if (!Object.values(EVENT_MESSAGES).includes(event.data.type)) {
+      return null
+    }
+    if (event?.data?.type === EVENT_MESSAGES.close) {
+      removeIframe(event)
+    } else {
+      createIframe(event.data.type)
     }
   }
 
