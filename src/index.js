@@ -1,8 +1,8 @@
-export const handleOpen = (event) => {
+export const handleOpen = (event, accountId) => {
   if (!Object.keys(EVENT_MESSAGES).includes(event)) {
     event = 'linkConnect'
   }
-  window.parent.postMessage({ type: EVENT_MESSAGES[event] }, '*')
+  window.parent.postMessage({ type: EVENT_MESSAGES[event], accountId }, '*')
 }
 
 export const handleClose = (url) => {
@@ -18,7 +18,8 @@ const EVENT_MESSAGES = {
   transferAssets: 'https://link.blockmate.io/transfer-assets'
 }
 
-export const LinkModal = (jwt) => {
+
+export const LinkModal = ({ jwt, url }) => {
   if (!jwt) return null
 
   const body = document.querySelector('body')
@@ -26,9 +27,9 @@ export const LinkModal = (jwt) => {
   const iframeStyle =
     'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0'
 
-  const createIframe = (url) => {
+  const createIframe = (url, accountId) => {
     const iframe = document.createElement('iframe')
-    iframe.setAttribute('src', `${url}/?jwt=${jwt}`)
+    iframe.setAttribute('src', `${url}/?jwt=${jwt}&accountId=${accountId}`)
     iframe.setAttribute('style', iframeStyle)
     iframe.setAttribute('id', 'link-iframe')
     body.appendChild(iframe)
@@ -49,7 +50,7 @@ export const LinkModal = (jwt) => {
     if (event?.data?.type === EVENT_MESSAGES.close) {
       removeIframe(event)
     } else {
-      createIframe(event.data.type)
+      createIframe(event.data.type, event.data.accountId)
     }
   }
 
