@@ -1,8 +1,8 @@
-export const handleOpen = (event, accountId) => {
-  if (!Object.keys(EVENT_MESSAGES).includes(event)) {
-    event = 'linkConnect'
+export const handleOpen = (message, accountId) => {
+  if (!Object.keys(EVENT_MESSAGES).includes(message)) {
+    message = 'linkConnect'
   }
-  window.parent.postMessage({ type: EVENT_MESSAGES[event], accountId }, '*')
+  window.parent.postMessage({ type: EVENT_MESSAGES[message], accountId }, '*')
 }
 
 export const handleClose = (url) => {
@@ -17,7 +17,6 @@ const EVENT_MESSAGES = {
   enableTransfer: 'https://link.blockmate.io/enable-transfer',
   transferAssets: 'https://link.blockmate.io/transfer-assets'
 }
-
 
 export const LinkModal = ({ jwt, url }) => {
   if (!jwt) return null
