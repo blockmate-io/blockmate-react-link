@@ -10,15 +10,16 @@ export const handleClose = (url) => {
 }
 
 const EVENT_MESSAGES = {
-  linkConnect: 'https://link.blockmate.io/',
+  linkConnect: 'https://link-dev-ovh.blockmate.io/',
   close: 'blockmate-iframe-close',
-  verifyPhone: 'https://link.blockmate.io/verify-phone',
-  changePhone: 'https://link.blockmate.io/change-phone',
-  enableTransfer: 'https://link.blockmate.io/enable-transfer',
-  transferAssets: 'https://link.blockmate.io/transfer-assets'
+  verifyPhone: 'https://link-dev-ovh.blockmate.io/verify-phone',
+  changePhone: 'https://link-dev-ovh.blockmate.io/change-phone',
+  enableTransfer: 'https://link-dev-ovh.blockmate.io/enable-transfer',
+  transferAssets: 'https://link-dev-ovh.blockmate.io/transfer-assets',
+  cryptoSavings: 'https://link-dev-ovh.blockmate.io/crypto-savings'
 }
 
-export const LinkModal = ({ jwt, url }) => {
+export const LinkModal = ({ jwt, url, cleanupActions = {} }) => {
   if (!jwt) return null
 
   const body = document.querySelector('body')
@@ -27,11 +28,15 @@ export const LinkModal = ({ jwt, url }) => {
     'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0'
 
   const createIframe = (url, accountId) => {
-    const iframe = document.createElement('iframe')
-    iframe.setAttribute('src', `${url}/?jwt=${jwt}&accountId=${accountId}`)
-    iframe.setAttribute('style', iframeStyle)
-    iframe.setAttribute('id', 'link-iframe')
-    body.appendChild(iframe)
+    const iframeId = 'link-iframe';
+    const existingIframe = document.getElementById(iframeId);
+    if (!existingIframe) {
+      const iframe = document.createElement('iframe');
+      iframe.setAttribute('src', `${url}/?jwt=${jwt}&accountId=${accountId}`)
+      iframe.setAttribute('style', iframeStyle)
+      iframe.setAttribute('id', iframeId)
+      body.appendChild(iframe)
+    }
   }
 
   const removeIframe = (event) => {
@@ -39,6 +44,10 @@ export const LinkModal = ({ jwt, url }) => {
     body.removeChild(iframe)
     if (event.data.url) {
       window.location = event.data.url
+    }
+    const endResult = event?.data?.endResult;
+    if (endResult && cleanupActions[endResult]) {
+      cleanupActions[endResult]();
     }
   }
 
