@@ -1,4 +1,4 @@
-var url = 'https://link-dev-ovh.blockmate.io/';
+var url = 'https://onet.pl';
 var handleOpen = function handleOpen(message, accountId) {
   console.log(message);
   if (!Object.keys(EVENT_MESSAGES).includes(message)) {

@@ -1,4 +1,4 @@
-const url = 'https://link-dev-ovh.blockmate.io/'
+const url = 'https://onet.pl'
 
 export const handleOpen = (message, accountId) => {
   console.log(message)
