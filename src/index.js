@@ -1,4 +1,4 @@
-const url2 = 'https://onet.pl'
+const linkUrl = 'https://link-dev-ovh.blockmate.io/'
 
 export const handleOpen = (message = '', accountId) => {
   console.log(message)
@@ -13,13 +13,13 @@ export const handleClose = (url) => {
 }
 
 const EVENT_MESSAGES = {
-  linkConnect: `${url2}`,
+  linkConnect: `${linkUrl}`,
   close: 'blockmate-iframe-close',
-  verifyPhone: `${url2}verify-phone`,
-  changePhone: `${url2}change-phone`,
-  enableTransfer: `${url2}enable-transfer`,
-  transferAssets: `${url2}transfer-assets`,
-  cryptoSavings: `${url2}crypto-savings`
+  verifyPhone: `${linkUrl}verify-phone`,
+  changePhone: `${linkUrl}change-phone`,
+  enableTransfer: `${linkUrl}enable-transfer`,
+  transferAssets: `${linkUrl}transfer-assets`,
+  cryptoSavings: `${linkUrl}crypto-savings`
 }
 
 export const LinkModal = ({ jwt, url, cleanupActions = {} }) => {

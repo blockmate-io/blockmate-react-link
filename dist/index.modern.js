@@ -1,4 +1,4 @@
-var url2 = 'https://onet.pl';
+var linkUrl = 'https://link-dev-ovh.blockmate.io/';
 var handleOpen = function handleOpen(message, accountId) {
   if (message === void 0) {
     message = '';
@@ -19,13 +19,13 @@ var handleClose = function handleClose(url) {
   }, '*');
 };
 var EVENT_MESSAGES = {
-  linkConnect: "" + url2,
+  linkConnect: "" + linkUrl,
   close: 'blockmate-iframe-close',
-  verifyPhone: url2 + "verify-phone",
-  changePhone: url2 + "change-phone",
-  enableTransfer: url2 + "enable-transfer",
-  transferAssets: url2 + "transfer-assets",
-  cryptoSavings: url2 + "crypto-savings"
+  verifyPhone: linkUrl + "verify-phone",
+  changePhone: linkUrl + "change-phone",
+  enableTransfer: linkUrl + "enable-transfer",
+  transferAssets: linkUrl + "transfer-assets",
+  cryptoSavings: linkUrl + "crypto-savings"
 };
 var LinkModal = function LinkModal(_ref) {
   var jwt = _ref.jwt,
