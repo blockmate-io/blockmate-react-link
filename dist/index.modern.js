@@ -1,5 +1,8 @@
 var url2 = 'https://onet.pl';
 var handleOpen = function handleOpen(message, accountId) {
+  if (message === void 0) {
+    message = '';
+  }
   console.log(message);
   if (!Object.keys(EVENT_MESSAGES).includes(message)) {
     message = 'linkConnect';
@@ -28,10 +31,12 @@ var LinkModal = function LinkModal(_ref) {
   var jwt = _ref.jwt,
     _ref$cleanupActions = _ref.cleanupActions,
     cleanupActions = _ref$cleanupActions === void 0 ? {} : _ref$cleanupActions;
+  console.log('link modal init');
   if (!jwt) return null;
   var body = document.querySelector('body');
   var iframeStyle = 'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0';
   var createIframe = function createIframe(url, accountId) {
+    console.log('create iframe');
     var iframeId = 'link-iframe';
     var existingIframe = document.getElementById(iframeId);
     if (!existingIframe) {
@@ -56,12 +61,15 @@ var LinkModal = function LinkModal(_ref) {
   };
   window.onmessage = function (event) {
     var _event$data2;
+    console.log('onmessage', event);
     if (!Object.values(EVENT_MESSAGES).includes(event.data.type)) {
+      console.log('on message null');
       return null;
     }
     if ((event === null || event === void 0 ? void 0 : (_event$data2 = event.data) === null || _event$data2 === void 0 ? void 0 : _event$data2.type) === EVENT_MESSAGES.close) {
       removeIframe(event);
     } else {
+      console.log('else create iframe');
       createIframe(event.data.type, event.data.accountId);
     }
   };

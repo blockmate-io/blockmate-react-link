@@ -1,6 +1,6 @@
 const url2 = 'https://onet.pl'
 
-export const handleOpen = (message, accountId) => {
+export const handleOpen = (message = '', accountId) => {
   console.log(message)
   if (!Object.keys(EVENT_MESSAGES).includes(message)) {
     message = 'linkConnect'
@@ -23,6 +23,7 @@ const EVENT_MESSAGES = {
 }
 
 export const LinkModal = ({ jwt, url, cleanupActions = {} }) => {
+  console.log('link modal init')
   if (!jwt) return null
 
   const body = document.querySelector('body')
@@ -31,6 +32,7 @@ export const LinkModal = ({ jwt, url, cleanupActions = {} }) => {
     'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0'
 
   const createIframe = (url, accountId) => {
+    console.log('create iframe')
     const iframeId = 'link-iframe'
     const existingIframe = document.getElementById(iframeId)
     if (!existingIframe) {
@@ -55,12 +57,15 @@ export const LinkModal = ({ jwt, url, cleanupActions = {} }) => {
   }
 
   window.onmessage = function (event) {
+    console.log('onmessage', event)
     if (!Object.values(EVENT_MESSAGES).includes(event.data.type)) {
+      console.log('on message null')
       return null
     }
     if (event?.data?.type === EVENT_MESSAGES.close) {
       removeIframe(event)
     } else {
+      console.log('else create iframe')
       createIframe(event.data.type, event.data.accountId)
     }
   }
