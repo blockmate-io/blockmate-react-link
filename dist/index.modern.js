@@ -1,4 +1,4 @@
-var url = process.env.REACT_APP_URL_LINK;
+var url = 'https://link-dev-ovh.blockmate.io/';
 var handleOpen = function handleOpen(message, accountId) {
   console.log(message);
   if (!Object.keys(EVENT_MESSAGES).includes(message)) {

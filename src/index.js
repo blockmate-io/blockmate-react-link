@@ -1,4 +1,4 @@
-const url = process.env.REACT_APP_URL_LINK
+const url = 'https://link-dev-ovh.blockmate.io/'
 
 export const handleOpen = (message, accountId) => {
   console.log(message)
