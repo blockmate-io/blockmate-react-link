@@ -57,7 +57,6 @@ export const LinkModal = ({ jwt, url, cleanupActions = {} }) => {
     if (!Object.values(EVENT_MESSAGES).includes(event.data.type)) {
       return null
     }
-    console.log(event)
     if (event?.data?.type === EVENT_MESSAGES.close) {
       removeIframe(event)
     } else {
