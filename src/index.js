@@ -34,7 +34,7 @@ export const LinkModal = ({ jwt, url, cleanupActions = {} }) => {
     const existingIframe = document.getElementById(iframeId)
     if (!existingIframe) {
       const iframe = document.createElement('iframe')
-      iframe.setAttribute('src', `${url}/?jwt=${jwt}&accountId=${accountId}`)
+      iframe.setAttribute('src', `${url}?jwt=${jwt}&accountId=${accountId}`)
       iframe.setAttribute('style', iframeStyle)
       iframe.setAttribute('id', iframeId)
       body.appendChild(iframe)
@@ -54,9 +54,9 @@ export const LinkModal = ({ jwt, url, cleanupActions = {} }) => {
   }
 
   window.onmessage = function (event) {
-    // if (!Object.values(EVENT_MESSAGES).includes(event.data.type)) {
-    //   return null
-    // }
+    if (!Object.values(EVENT_MESSAGES).includes(event.data.type)) {
+      return null
+    }
     console.log(event)
     if (event?.data?.type === EVENT_MESSAGES.close) {
       removeIframe(event)

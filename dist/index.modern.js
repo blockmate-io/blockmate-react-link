@@ -38,7 +38,7 @@ var LinkModal = function LinkModal(_ref) {
     var existingIframe = document.getElementById(iframeId);
     if (!existingIframe) {
       var iframe = document.createElement('iframe');
-      iframe.setAttribute('src', url + "/?jwt=" + jwt + "&accountId=" + accountId);
+      iframe.setAttribute('src', url + "?jwt=" + jwt + "&accountId=" + accountId);
       iframe.setAttribute('style', iframeStyle);
       iframe.setAttribute('id', iframeId);
       body.appendChild(iframe);
@@ -58,6 +58,9 @@ var LinkModal = function LinkModal(_ref) {
   };
   window.onmessage = function (event) {
     var _event$data2;
+    if (!Object.values(EVENT_MESSAGES).includes(event.data.type)) {
+      return null;
+    }
     console.log(event);
     if ((event === null || event === void 0 ? void 0 : (_event$data2 = event.data) === null || _event$data2 === void 0 ? void 0 : _event$data2.type) === EVENT_MESSAGES.close) {
       removeIframe(event);
