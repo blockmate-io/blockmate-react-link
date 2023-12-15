@@ -1,4 +1,7 @@
+const url = process.env.REACT_APP_URL_LINK
+
 export const handleOpen = (message, accountId) => {
+  console.log(message)
   if (!Object.keys(EVENT_MESSAGES).includes(message)) {
     message = 'linkConnect'
   }
@@ -10,13 +13,13 @@ export const handleClose = (url) => {
 }
 
 const EVENT_MESSAGES = {
-  linkConnect: 'https://link-dev-ovh.blockmate.io/',
+  linkConnect: `${url}`,
   close: 'blockmate-iframe-close',
-  verifyPhone: 'https://link-dev-ovh.blockmate.io/verify-phone',
-  changePhone: 'https://link-dev-ovh.blockmate.io/change-phone',
-  enableTransfer: 'https://link-dev-ovh.blockmate.io/enable-transfer',
-  transferAssets: 'https://link-dev-ovh.blockmate.io/transfer-assets',
-  cryptoSavings: 'https://link-dev-ovh.blockmate.io/crypto-savings'
+  verifyPhone: `${url}verify-phone`,
+  changePhone: `${url}change-phone`,
+  enableTransfer: `${url}enable-transfer`,
+  transferAssets: `${url}transfer-assets`,
+  cryptoSavings: `${url}crypto-savings`
 }
 
 export const LinkModal = ({ jwt, url, cleanupActions = {} }) => {
@@ -28,10 +31,10 @@ export const LinkModal = ({ jwt, url, cleanupActions = {} }) => {
     'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0'
 
   const createIframe = (url, accountId) => {
-    const iframeId = 'link-iframe';
-    const existingIframe = document.getElementById(iframeId);
+    const iframeId = 'link-iframe'
+    const existingIframe = document.getElementById(iframeId)
     if (!existingIframe) {
-      const iframe = document.createElement('iframe');
+      const iframe = document.createElement('iframe')
       iframe.setAttribute('src', `${url}/?jwt=${jwt}&accountId=${accountId}`)
       iframe.setAttribute('style', iframeStyle)
       iframe.setAttribute('id', iframeId)
@@ -45,9 +48,9 @@ export const LinkModal = ({ jwt, url, cleanupActions = {} }) => {
     if (event.data.url) {
       window.location = event.data.url
     }
-    const endResult = event?.data?.endResult;
+    const endResult = event?.data?.endResult
     if (endResult && cleanupActions[endResult]) {
-      cleanupActions[endResult]();
+      cleanupActions[endResult]()
     }
   }
 
