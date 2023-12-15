@@ -1,4 +1,4 @@
-var url = 'https://onet.pl';
+var url2 = 'https://onet.pl';
 var handleOpen = function handleOpen(message, accountId) {
   console.log(message);
   if (!Object.keys(EVENT_MESSAGES).includes(message)) {
@@ -16,13 +16,13 @@ var handleClose = function handleClose(url) {
   }, '*');
 };
 var EVENT_MESSAGES = {
-  linkConnect: "" + url,
+  linkConnect: "" + url2,
   close: 'blockmate-iframe-close',
-  verifyPhone: url + "verify-phone",
-  changePhone: url + "change-phone",
-  enableTransfer: url + "enable-transfer",
-  transferAssets: url + "transfer-assets",
-  cryptoSavings: url + "crypto-savings"
+  verifyPhone: url2 + "verify-phone",
+  changePhone: url2 + "change-phone",
+  enableTransfer: url2 + "enable-transfer",
+  transferAssets: url2 + "transfer-assets",
+  cryptoSavings: url2 + "crypto-savings"
 };
 var LinkModal = function LinkModal(_ref) {
   var jwt = _ref.jwt,

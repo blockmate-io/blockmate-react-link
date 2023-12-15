@@ -1,4 +1,4 @@
-const url = 'https://onet.pl'
+const url2 = 'https://onet.pl'
 
 export const handleOpen = (message, accountId) => {
   console.log(message)
@@ -13,13 +13,13 @@ export const handleClose = (url) => {
 }
 
 const EVENT_MESSAGES = {
-  linkConnect: `${url}`,
+  linkConnect: `${url2}`,
   close: 'blockmate-iframe-close',
-  verifyPhone: `${url}verify-phone`,
-  changePhone: `${url}change-phone`,
-  enableTransfer: `${url}enable-transfer`,
-  transferAssets: `${url}transfer-assets`,
-  cryptoSavings: `${url}crypto-savings`
+  verifyPhone: `${url2}verify-phone`,
+  changePhone: `${url2}change-phone`,
+  enableTransfer: `${url2}enable-transfer`,
+  transferAssets: `${url2}transfer-assets`,
+  cryptoSavings: `${url2}crypto-savings`
 }
 
 export const LinkModal = ({ jwt, url, cleanupActions = {} }) => {
