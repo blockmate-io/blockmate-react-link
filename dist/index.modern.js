@@ -65,7 +65,7 @@ var LinkModal = function LinkModal(_ref) {
     if ((event === null || event === void 0 ? void 0 : (_event$data2 = event.data) === null || _event$data2 === void 0 ? void 0 : _event$data2.type) === 'close') {
       removeIframe(event);
     } else {
-      createIframe(new URL(url, EVENT_MESSAGES[event.data.type]).href, event.data.accountId);
+      createIframe(new URL(EVENT_MESSAGES[event.data.type], url).href, event.data.accountId);
     }
   };
   return null;

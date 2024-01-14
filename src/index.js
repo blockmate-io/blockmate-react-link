@@ -65,7 +65,7 @@ export const LinkModal = ({
       removeIframe(event)
     } else {
       createIframe(
-        new URL(url, EVENT_MESSAGES[event.data.type]).href,
+        new URL(EVENT_MESSAGES[event.data.type], url).href,
         event.data.accountId
       )
     }
