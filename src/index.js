@@ -1,27 +1,36 @@
-const linkUrl = 'https://link-dev-ovh.blockmate.io/'
+const EVENT_MESSAGES = {
+  linkConnect: ``,
+  verifyPhone: `verify-phone`,
+  changePhone: `change-phone`,
+  enableTransfer: `enable-transfer`,
+  transferAssets: `transfer-assets`,
+  cryptoSavings: `crypto-savings`,
+  close: 'blockmate-iframe-close'
+}
+
 export const handleOpen = (message = '', accountId) => {
   if (!Object.keys(EVENT_MESSAGES).includes(message)) {
     message = 'linkConnect'
   }
-  window.parent.postMessage({ type: EVENT_MESSAGES[message], accountId }, '*')
+
+  window.parent.postMessage({ type: message, accountId }, '*')
 }
+
 export const handleClose = (url) => {
-  window.parent.postMessage({ type: EVENT_MESSAGES.close, url }, '*')
+  window.parent.postMessage({ type: 'close', url }, '*')
 }
-const EVENT_MESSAGES = {
-  linkConnect: `${linkUrl}`,
-  close: 'blockmate-iframe-close',
-  verifyPhone: `${linkUrl}verify-phone`,
-  changePhone: `${linkUrl}change-phone`,
-  enableTransfer: `${linkUrl}enable-transfer`,
-  transferAssets: `${linkUrl}transfer-assets`,
-  cryptoSavings: `${linkUrl}crypto-savings`
-}
-export const LinkModal = ({ jwt, url, cleanupActions = {} }) => {
+
+export const LinkModal = ({
+  jwt,
+  url = 'https://link.blockmate.io/',
+  cleanupActions = {}
+}) => {
   if (!jwt) return null
+
   const body = document.querySelector('body')
   const iframeStyle =
     'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0'
+
   const createIframe = (url, accountId) => {
     const iframeId = 'link-iframe'
     const existingIframe = document.getElementById(iframeId)
@@ -33,26 +42,34 @@ export const LinkModal = ({ jwt, url, cleanupActions = {} }) => {
       body.appendChild(iframe)
     }
   }
+
   const removeIframe = (event) => {
     const iframe = document.querySelector('#link-iframe')
     body.removeChild(iframe)
     if (event.data.url) {
       window.location = event.data.url
     }
+
     const endResult = event?.data?.endResult
     if (endResult && cleanupActions[endResult]) {
       cleanupActions[endResult]()
     }
   }
+
   window.onmessage = function (event) {
-    if (!Object.values(EVENT_MESSAGES).includes(event.data.type)) {
+    if (!Object.hasOwn(EVENT_MESSAGES, event.data.type)) {
       return null
     }
-    if (event?.data?.type === EVENT_MESSAGES.close) {
+
+    if (event?.data?.type === 'close') {
       removeIframe(event)
     } else {
-      createIframe(event.data.type, event.data.accountId)
+      createIframe(
+        new URL(url, EVENT_MESSAGES[event.data.type]).href,
+        event.data.accountId
+      )
     }
   }
+
   return null
 }

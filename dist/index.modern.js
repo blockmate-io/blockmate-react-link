@@ -1,4 +1,12 @@
-var linkUrl = 'https://link-dev-ovh.blockmate.io/';
+var EVENT_MESSAGES = {
+  linkConnect: "",
+  verifyPhone: "verify-phone",
+  changePhone: "change-phone",
+  enableTransfer: "enable-transfer",
+  transferAssets: "transfer-assets",
+  cryptoSavings: "crypto-savings",
+  close: 'blockmate-iframe-close'
+};
 var handleOpen = function handleOpen(message, accountId) {
   if (message === void 0) {
     message = '';
@@ -7,27 +15,20 @@ var handleOpen = function handleOpen(message, accountId) {
     message = 'linkConnect';
   }
   window.parent.postMessage({
-    type: EVENT_MESSAGES[message],
+    type: message,
     accountId: accountId
   }, '*');
 };
 var handleClose = function handleClose(url) {
   window.parent.postMessage({
-    type: EVENT_MESSAGES.close,
+    type: 'close',
     url: url
   }, '*');
 };
-var EVENT_MESSAGES = {
-  linkConnect: "" + linkUrl,
-  close: 'blockmate-iframe-close',
-  verifyPhone: linkUrl + "verify-phone",
-  changePhone: linkUrl + "change-phone",
-  enableTransfer: linkUrl + "enable-transfer",
-  transferAssets: linkUrl + "transfer-assets",
-  cryptoSavings: linkUrl + "crypto-savings"
-};
 var LinkModal = function LinkModal(_ref) {
   var jwt = _ref.jwt,
+    _ref$url = _ref.url,
+    url = _ref$url === void 0 ? 'https://link.blockmate.io/' : _ref$url,
     _ref$cleanupActions = _ref.cleanupActions,
     cleanupActions = _ref$cleanupActions === void 0 ? {} : _ref$cleanupActions;
   if (!jwt) return null;
@@ -58,13 +59,13 @@ var LinkModal = function LinkModal(_ref) {
   };
   window.onmessage = function (event) {
     var _event$data2;
-    if (!Object.values(EVENT_MESSAGES).includes(event.data.type)) {
+    if (!Object.hasOwn(EVENT_MESSAGES, event.data.type)) {
       return null;
     }
-    if ((event === null || event === void 0 ? void 0 : (_event$data2 = event.data) === null || _event$data2 === void 0 ? void 0 : _event$data2.type) === EVENT_MESSAGES.close) {
+    if ((event === null || event === void 0 ? void 0 : (_event$data2 = event.data) === null || _event$data2 === void 0 ? void 0 : _event$data2.type) === 'close') {
       removeIframe(event);
     } else {
-      createIframe(event.data.type, event.data.accountId);
+      createIframe(new URL(url, EVENT_MESSAGES[event.data.type]).href, event.data.accountId);
     }
   };
   return null;
