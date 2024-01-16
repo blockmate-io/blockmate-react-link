@@ -5,6 +5,7 @@ const EVENT_MESSAGES = {
   enableTransfer: `enable-transfer`,
   transferAssets: `transfer-assets`,
   cryptoSavings: `crypto-savings`,
+  withdrawAssets: `withdraw-assets`,
   close: 'blockmate-iframe-close'
 }
 
@@ -49,7 +50,7 @@ export const LinkModal = ({
       iframe.setAttribute('style', iframeStyle)
       iframe.setAttribute('id', iframeId)
       iframe.setAttribute('allow', 'camera');  // For QR-code scanning
-      body.appendChild(iframe)
+      body.appendChild(iframe);
     }
   }
 

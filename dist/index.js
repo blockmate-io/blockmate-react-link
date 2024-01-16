@@ -5,6 +5,7 @@ var EVENT_MESSAGES = {
   enableTransfer: "enable-transfer",
   transferAssets: "transfer-assets",
   cryptoSavings: "crypto-savings",
+  withdrawAssets: "withdraw-assets",
   close: 'blockmate-iframe-close'
 };
 var handleOpen = function handleOpen(message, accountId) {
