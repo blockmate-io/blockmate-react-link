@@ -30,7 +30,9 @@ var LinkModal = function LinkModal(_ref) {
     _ref$url = _ref.url,
     url = _ref$url === void 0 ? 'https://link.blockmate.io/' : _ref$url,
     _ref$cleanupActions = _ref.cleanupActions,
-    cleanupActions = _ref$cleanupActions === void 0 ? {} : _ref$cleanupActions;
+    cleanupActions = _ref$cleanupActions === void 0 ? {} : _ref$cleanupActions,
+    _ref$additionalUrlPar = _ref.additionalUrlParams,
+    additionalUrlParams = _ref$additionalUrlPar === void 0 ? null : _ref$additionalUrlPar;
   if (!jwt) return null;
   var body = document.querySelector('body');
   var iframeStyle = 'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0';
@@ -38,10 +40,18 @@ var LinkModal = function LinkModal(_ref) {
     var iframeId = 'link-iframe';
     var existingIframe = document.getElementById(iframeId);
     if (!existingIframe) {
+      var additionalParamsStr = '';
+      if (additionalUrlParams) {
+        additionalParamsStr = Object.keys(additionalUrlParams).map(function (key) {
+          return "&" + key + "=" + additionalUrlParams[key] + "\n        ";
+        }).join('');
+      }
+      var urlWithParams = url + "/?jwt=" + jwt + "&accountId=" + accountId + additionalParamsStr;
       var iframe = document.createElement('iframe');
-      iframe.setAttribute('src', url + "?jwt=" + jwt + "&accountId=" + accountId);
+      iframe.setAttribute('src', urlWithParams);
       iframe.setAttribute('style', iframeStyle);
       iframe.setAttribute('id', iframeId);
+      iframe.setAttribute('allow', 'camera');
       body.appendChild(iframe);
     }
   };
