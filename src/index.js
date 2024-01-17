@@ -43,7 +43,7 @@ export const LinkModal = ({
           `&${key}=${additionalUrlParams[key]}
         `).join('');
       }
-      const urlWithParams = `${url}/?jwt=${jwt}&accountId=${accountId}${additionalParamsStr}`
+      const urlWithParams = `${url}?jwt=${jwt}&accountId=${accountId}${additionalParamsStr}`
 
       const iframe = document.createElement('iframe')
       iframe.setAttribute('src', urlWithParams)
