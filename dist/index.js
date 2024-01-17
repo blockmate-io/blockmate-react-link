@@ -47,7 +47,7 @@ var LinkModal = function LinkModal(_ref) {
           return "&" + key + "=" + additionalUrlParams[key] + "\n        ";
         }).join('');
       }
-      var urlWithParams = url + "/?jwt=" + jwt + "&accountId=" + accountId + additionalParamsStr;
+      var urlWithParams = url + "?jwt=" + jwt + "&accountId=" + accountId + additionalParamsStr;
       var iframe = document.createElement('iframe');
       iframe.setAttribute('src', urlWithParams);
       iframe.setAttribute('style', iframeStyle);
