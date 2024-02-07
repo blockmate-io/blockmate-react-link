@@ -17,8 +17,8 @@ export const handleOpen = (message = '', accountId) => {
   window.parent.postMessage({ type: message, accountId }, '*')
 }
 
-export const handleClose = (url) => {
-  window.parent.postMessage({ type: 'close', url }, '*')
+export const handleClose = (endResult) => {
+  window.parent.postMessage({ type: 'close', endResult }, '*')
 }
 
 export const LinkModal = ({
