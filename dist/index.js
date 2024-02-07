@@ -20,10 +20,10 @@ var handleOpen = function handleOpen(message, accountId) {
     accountId: accountId
   }, '*');
 };
-var handleClose = function handleClose(url) {
+var handleClose = function handleClose(endResult) {
   window.parent.postMessage({
     type: 'close',
-    url: url
+    endResult: endResult
   }, '*');
 };
 var LinkModal = function LinkModal(_ref) {
