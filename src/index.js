@@ -6,20 +6,24 @@ const EVENT_MESSAGES = {
   transferAssets: `transfer-assets`,
   cryptoSavings: `crypto-savings`,
   withdrawAssets: `withdraw-assets`,
-  close: 'blockmate-iframe-close'
+  close: 'blockmate-iframe-close',
+  redirect: 'redirect'
 }
 
 export const handleOpen = (message = '', accountId, oauthConnectedAccount) => {
   if (!Object.keys(EVENT_MESSAGES).includes(message)) {
-    message = 'linkConnect'
+    message = EVENT_MESSAGES.linkConnect;
   }
-
-  window.parent.postMessage({ type: message, accountId, oauthConnectedAccount }, '*')
+  window.parent.postMessage({ type: message, accountId, oauthConnectedAccount }, '*');
 }
 
 export const handleClose = (endResult) => {
-  window.parent.postMessage({ type: 'close', endResult }, '*')
+  window.parent.postMessage({ type: EVENT_MESSAGES.close, endResult }, '*');
 }
+
+export const handleRedirect = (targetUrl) => {
+  window.parent.postMessage({ type: EVENT_MESSAGES.redirect, targetUrl }, '*');
+};
 
 export const LinkModal = ({
   jwt,
@@ -113,8 +117,10 @@ export const LinkModal = ({
       return null
     }
 
-    if (event?.data?.type === 'close') {
+    if (event?.data?.type === EVENT_MESSAGES.close) {
       removeIframe(event);
+    } else if (event?.data?.type === EVENT_MESSAGES.redirect) {
+      window.location.replace(event.data.targetUrl);
     } else {
       createIframe(
         new URL(EVENT_MESSAGES[event.data.type], url).href,
