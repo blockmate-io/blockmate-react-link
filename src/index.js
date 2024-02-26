@@ -28,9 +28,10 @@ export const LinkModal = ({
   additionalUrlParams= null
 }) => {
   const OAUTH_QUERY_PARAM = 'oauthConnectedAccount';
-  const OAUTH_LOCAL_STORAGE_KEY = 'oauthConnectedAccount';
+  const OAUTH_LOCAL_STORAGE_KEY = 'oauth_connected_account';
   let oauthPollingInterval;
 
+  // For oauth
   const startOauthSuccessPolling = () => {
     oauthPollingInterval = setInterval(() => {
       const params = new URLSearchParams(window.location.search);
@@ -39,15 +40,18 @@ export const LinkModal = ({
         params.delete(OAUTH_QUERY_PARAM);
         localStorage.setItem(OAUTH_LOCAL_STORAGE_KEY, maybeOauthConnectedAccount);
         // This will redirect the user to the same page without the query param, but with state in localStorage
-        window.location.href = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+        location.replace(`${window.location.origin}${window.location.pathname}?${params.toString()}`);
       }
-    }, 3000);
+    }, 500);
   };
 
+  // For oauth
   const startLocalStoragePolling = () => {
     const localStoragePollingInterval = setInterval(() => {
       const oauthConnectedAccount = localStorage.getItem(OAUTH_LOCAL_STORAGE_KEY);
-      if (oauthConnectedAccount && createIframe) {
+      const currentUrl = new URL(window.location.href);
+      const oauthQueryParamDeletedAlready = !currentUrl.searchParams.has(OAUTH_QUERY_PARAM);
+      if (oauthConnectedAccount && oauthQueryParamDeletedAlready) {
         createIframe(
           new URL(EVENT_MESSAGES.linkConnect, url).href,
           undefined,
@@ -55,11 +59,8 @@ export const LinkModal = ({
         );
         localStorage.removeItem(OAUTH_LOCAL_STORAGE_KEY);
       }
-    }, 3000);
+    }, 500);
   };
-
-  startOauthSuccessPolling();
-  startLocalStoragePolling();
 
   if (!jwt) return null
 
@@ -103,6 +104,9 @@ export const LinkModal = ({
       cleanupActions[endResult]()
     }
   }
+
+  startOauthSuccessPolling();
+  startLocalStoragePolling();
 
   window.onmessage = function (event) {
     if (!Object.hasOwn(EVENT_MESSAGES, event.data.type)) {

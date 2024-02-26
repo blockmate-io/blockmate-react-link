@@ -36,7 +36,7 @@ var LinkModal = function LinkModal(_ref) {
     _ref$additionalUrlPar = _ref.additionalUrlParams,
     additionalUrlParams = _ref$additionalUrlPar === void 0 ? null : _ref$additionalUrlPar;
   var OAUTH_QUERY_PARAM = 'oauthConnectedAccount';
-  var OAUTH_LOCAL_STORAGE_KEY = 'oauthConnectedAccount';
+  var OAUTH_LOCAL_STORAGE_KEY = 'oauth_connected_account';
   var oauthPollingInterval;
   var startOauthSuccessPolling = function startOauthSuccessPolling() {
     oauthPollingInterval = setInterval(function () {
@@ -45,21 +45,21 @@ var LinkModal = function LinkModal(_ref) {
       if (maybeOauthConnectedAccount) {
         params["delete"](OAUTH_QUERY_PARAM);
         localStorage.setItem(OAUTH_LOCAL_STORAGE_KEY, maybeOauthConnectedAccount);
-        window.location.href = "" + window.location.origin + window.location.pathname + "?" + params.toString();
+        location.replace("" + window.location.origin + window.location.pathname + "?" + params.toString());
       }
-    }, 3000);
+    }, 500);
   };
   var startLocalStoragePolling = function startLocalStoragePolling() {
     var localStoragePollingInterval = setInterval(function () {
       var oauthConnectedAccount = localStorage.getItem(OAUTH_LOCAL_STORAGE_KEY);
-      if (oauthConnectedAccount && createIframe) {
+      var currentUrl = new URL(window.location.href);
+      var oauthQueryParamDeletedAlready = !currentUrl.searchParams.has(OAUTH_QUERY_PARAM);
+      if (oauthConnectedAccount && oauthQueryParamDeletedAlready) {
         createIframe(new URL(EVENT_MESSAGES.linkConnect, url).href, undefined, oauthConnectedAccount);
         localStorage.removeItem(OAUTH_LOCAL_STORAGE_KEY);
       }
-    }, 3000);
+    }, 500);
   };
-  startOauthSuccessPolling();
-  startLocalStoragePolling();
   if (!jwt) return null;
   var body = document.querySelector('body');
   var iframeStyle = 'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0';
@@ -97,6 +97,8 @@ var LinkModal = function LinkModal(_ref) {
       cleanupActions[endResult]();
     }
   };
+  startOauthSuccessPolling();
+  startLocalStoragePolling();
   window.onmessage = function (event) {
     var _event$data2;
     if (!Object.hasOwn(EVENT_MESSAGES, event.data.type)) {
