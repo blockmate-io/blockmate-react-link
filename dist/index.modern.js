@@ -6,14 +6,15 @@ var EVENT_MESSAGES = {
   transferAssets: "transfer-assets",
   cryptoSavings: "crypto-savings",
   withdrawAssets: "withdraw-assets",
-  close: 'blockmate-iframe-close'
+  close: 'blockmate-iframe-close',
+  redirect: 'redirect'
 };
 var handleOpen = function handleOpen(message, accountId, oauthConnectedAccount) {
   if (message === void 0) {
     message = '';
   }
   if (!Object.keys(EVENT_MESSAGES).includes(message)) {
-    message = 'linkConnect';
+    message = EVENT_MESSAGES.linkConnect;
   }
   window.parent.postMessage({
     type: message,
@@ -23,8 +24,14 @@ var handleOpen = function handleOpen(message, accountId, oauthConnectedAccount) 
 };
 var handleClose = function handleClose(endResult) {
   window.parent.postMessage({
-    type: 'close',
+    type: EVENT_MESSAGES.close,
     endResult: endResult
+  }, '*');
+};
+var handleRedirect = function handleRedirect(targetUrl) {
+  window.parent.postMessage({
+    type: EVENT_MESSAGES.redirect,
+    targetUrl: targetUrl
   }, '*');
 };
 var LinkModal = function LinkModal(_ref) {
@@ -100,12 +107,14 @@ var LinkModal = function LinkModal(_ref) {
   startOauthSuccessPolling();
   startLocalStoragePolling();
   window.onmessage = function (event) {
-    var _event$data2;
+    var _event$data2, _event$data3;
     if (!Object.hasOwn(EVENT_MESSAGES, event.data.type)) {
       return null;
     }
-    if ((event === null || event === void 0 ? void 0 : (_event$data2 = event.data) === null || _event$data2 === void 0 ? void 0 : _event$data2.type) === 'close') {
+    if ((event === null || event === void 0 ? void 0 : (_event$data2 = event.data) === null || _event$data2 === void 0 ? void 0 : _event$data2.type) === EVENT_MESSAGES.close) {
       removeIframe(event);
+    } else if ((event === null || event === void 0 ? void 0 : (_event$data3 = event.data) === null || _event$data3 === void 0 ? void 0 : _event$data3.type) === EVENT_MESSAGES.redirect) {
+      window.location.replace(event.data.targetUrl);
     } else {
       createIframe(new URL(EVENT_MESSAGES[event.data.type], url).href, event.data.accountId, event.data.oauthConnectedAccount);
     }
@@ -113,5 +122,5 @@ var LinkModal = function LinkModal(_ref) {
   return null;
 };
 
-export { LinkModal, handleClose, handleOpen };
+export { LinkModal, handleClose, handleOpen, handleRedirect };
 //# sourceMappingURL=index.modern.js.map
