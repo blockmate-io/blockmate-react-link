@@ -80,7 +80,8 @@ var LinkModal = function LinkModal(_ref) {
           return "&" + key + "=" + additionalUrlParams[key] + "\n        ";
         }).join('');
       }
-      var urlWithParams = url + "?jwt=" + jwt + "&accountId=" + accountId + additionalParamsStr;
+      var parentUrlEncoded = encodeURIComponent(window.location.href);
+      var urlWithParams = url + "?jwt=" + jwt + "&accountId=" + accountId + "&parentUrlEncoded=" + parentUrlEncoded + additionalParamsStr;
       if (oauthConnectedAccount) {
         urlWithParams += "&" + OAUTH_QUERY_PARAM + "=" + oauthConnectedAccount;
       }

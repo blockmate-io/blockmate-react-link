@@ -82,7 +82,8 @@ export const LinkModal = ({
           `&${key}=${additionalUrlParams[key]}
         `).join('');
       }
-      let urlWithParams = `${url}?jwt=${jwt}&accountId=${accountId}${additionalParamsStr}`;
+      const parentUrlEncoded = encodeURIComponent(window.location.href);
+      let urlWithParams = `${url}?jwt=${jwt}&accountId=${accountId}&parentUrlEncoded=${parentUrlEncoded}${additionalParamsStr}`;
       if (oauthConnectedAccount) {
         urlWithParams += `&${OAUTH_QUERY_PARAM}=${oauthConnectedAccount}`;
       }
