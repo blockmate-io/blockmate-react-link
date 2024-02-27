@@ -12,17 +12,17 @@ const EVENT_MESSAGES = {
 
 export const handleOpen = (message = '', accountId, oauthConnectedAccount) => {
   if (!Object.keys(EVENT_MESSAGES).includes(message)) {
-    message = EVENT_MESSAGES.linkConnect;
+    message = 'linkConnect';
   }
   window.parent.postMessage({ type: message, accountId, oauthConnectedAccount }, '*');
 }
 
 export const handleClose = (endResult) => {
-  window.parent.postMessage({ type: EVENT_MESSAGES.close, endResult }, '*');
+  window.parent.postMessage({ type: 'close', endResult }, '*');
 }
 
 export const handleRedirect = (targetUrl) => {
-  window.parent.postMessage({ type: EVENT_MESSAGES.redirect, targetUrl }, '*');
+  window.parent.postMessage({ type: 'redirect', targetUrl }, '*');
 };
 
 export const LinkModal = ({
@@ -118,9 +118,9 @@ export const LinkModal = ({
       return null
     }
 
-    if (event?.data?.type === EVENT_MESSAGES.close) {
+    if (event?.data?.type === 'close') {
       removeIframe(event);
-    } else if (event?.data?.type === EVENT_MESSAGES.redirect) {
+    } else if (event?.data?.type === 'redirect') {
       window.location.replace(event.data.targetUrl);
     } else {
       createIframe(

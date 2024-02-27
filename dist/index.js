@@ -14,7 +14,7 @@ var handleOpen = function handleOpen(message, accountId, oauthConnectedAccount) 
     message = '';
   }
   if (!Object.keys(EVENT_MESSAGES).includes(message)) {
-    message = EVENT_MESSAGES.linkConnect;
+    message = 'linkConnect';
   }
   window.parent.postMessage({
     type: message,
@@ -24,13 +24,13 @@ var handleOpen = function handleOpen(message, accountId, oauthConnectedAccount) 
 };
 var handleClose = function handleClose(endResult) {
   window.parent.postMessage({
-    type: EVENT_MESSAGES.close,
+    type: 'close',
     endResult: endResult
   }, '*');
 };
 var handleRedirect = function handleRedirect(targetUrl) {
   window.parent.postMessage({
-    type: EVENT_MESSAGES.redirect,
+    type: 'redirect',
     targetUrl: targetUrl
   }, '*');
 };
@@ -112,9 +112,9 @@ var LinkModal = function LinkModal(_ref) {
     if (!Object.hasOwn(EVENT_MESSAGES, event.data.type)) {
       return null;
     }
-    if ((event === null || event === void 0 ? void 0 : (_event$data2 = event.data) === null || _event$data2 === void 0 ? void 0 : _event$data2.type) === EVENT_MESSAGES.close) {
+    if ((event === null || event === void 0 ? void 0 : (_event$data2 = event.data) === null || _event$data2 === void 0 ? void 0 : _event$data2.type) === 'close') {
       removeIframe(event);
-    } else if ((event === null || event === void 0 ? void 0 : (_event$data3 = event.data) === null || _event$data3 === void 0 ? void 0 : _event$data3.type) === EVENT_MESSAGES.redirect) {
+    } else if ((event === null || event === void 0 ? void 0 : (_event$data3 = event.data) === null || _event$data3 === void 0 ? void 0 : _event$data3.type) === 'redirect') {
       window.location.replace(event.data.targetUrl);
     } else {
       createIframe(new URL(EVENT_MESSAGES[event.data.type], url).href, event.data.accountId, event.data.oauthConnectedAccount);
