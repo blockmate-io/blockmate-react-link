@@ -9,6 +9,7 @@ var EVENT_MESSAGES = {
   close: 'blockmate-iframe-close',
   redirect: 'redirect'
 };
+var TRUSTED_ORIGINS = ['https://link.blockmate.io', 'https://link-dev-ovh.blockmate.io', 'https://link-cs.blockmate.io', 'http://localhost:3000'];
 var handleOpen = function handleOpen(message, accountId, oauthConnectedAccount) {
   if (message === void 0) {
     message = '';
@@ -108,13 +109,18 @@ var LinkModal = function LinkModal(_ref) {
   startOauthSuccessPolling();
   startLocalStoragePolling();
   window.onmessage = function (event) {
-    var _event$data2, _event$data3;
+    var _event$data2, _event$data3, _event$data4;
     if (!Object.hasOwn(EVENT_MESSAGES, event.data.type)) {
       return null;
     }
-    if ((event === null || event === void 0 ? void 0 : (_event$data2 = event.data) === null || _event$data2 === void 0 ? void 0 : _event$data2.type) === 'close') {
+    if (['close', 'redirect'].includes(event === null || event === void 0 ? void 0 : (_event$data2 = event.data) === null || _event$data2 === void 0 ? void 0 : _event$data2.type)) {
+      if (!TRUSTED_ORIGINS.includes(event.origin)) {
+        return null;
+      }
+    }
+    if ((event === null || event === void 0 ? void 0 : (_event$data3 = event.data) === null || _event$data3 === void 0 ? void 0 : _event$data3.type) === 'close') {
       removeIframe(event);
-    } else if ((event === null || event === void 0 ? void 0 : (_event$data3 = event.data) === null || _event$data3 === void 0 ? void 0 : _event$data3.type) === 'redirect') {
+    } else if ((event === null || event === void 0 ? void 0 : (_event$data4 = event.data) === null || _event$data4 === void 0 ? void 0 : _event$data4.type) === 'redirect') {
       window.location.replace(event.data.targetUrl);
     } else {
       createIframe(new URL(EVENT_MESSAGES[event.data.type], url).href, event.data.accountId, event.data.oauthConnectedAccount);

@@ -10,6 +10,13 @@ const EVENT_MESSAGES = {
   redirect: 'redirect'
 }
 
+const TRUSTED_ORIGINS = [
+  'https://link.blockmate.io',
+  'https://link-dev-ovh.blockmate.io',
+  'https://link-cs.blockmate.io',
+  'http://localhost:3000'
+];
+
 export const handleOpen = (message = '', accountId, oauthConnectedAccount) => {
   if (!Object.keys(EVENT_MESSAGES).includes(message)) {
     message = 'linkConnect';
@@ -116,6 +123,13 @@ export const LinkModal = ({
   window.onmessage = function (event) {
     if (!Object.hasOwn(EVENT_MESSAGES, event.data.type)) {
       return null
+    }
+
+    // These actions can only be called from within the iframe, check origin as they can perform redirects of the parent
+    if (['close', 'redirect'].includes(event?.data?.type)) {
+      if (!TRUSTED_ORIGINS.includes(event.origin)) {
+        return null;
+      }
     }
 
     if (event?.data?.type === 'close') {
