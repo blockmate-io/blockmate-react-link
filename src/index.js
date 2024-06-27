@@ -7,7 +7,8 @@ const EVENT_MESSAGES = {
   cryptoSavings: `crypto-savings`,
   withdrawAssets: `withdraw-assets`,
   close: 'blockmate-iframe-close',
-  redirect: 'redirect'
+  redirect: 'redirect',
+  deposit: 'deposit',
 }
 
 const TRUSTED_ORIGINS = [
@@ -17,11 +18,11 @@ const TRUSTED_ORIGINS = [
   'http://localhost:3000'
 ];
 
-export const handleOpen = (message = '', accountId, oauthConnectedAccount) => {
+export const handleOpen = (message = '', accountId, oauthConnectedAccount, extraUrlParams) => {
   if (!Object.keys(EVENT_MESSAGES).includes(message)) {
     message = 'linkConnect';
   }
-  window.parent.postMessage({ type: message, accountId, oauthConnectedAccount }, '*');
+  window.parent.postMessage({ type: message, accountId, oauthConnectedAccount, extraUrlParams }, '*');
 }
 
 export const handleClose = (endResult) => {
@@ -73,8 +74,6 @@ export const LinkModal = ({
     }, 500);
   };
 
-  if (!jwt) return null
-
   const body = document.querySelector('body')
   const iframeStyle =
     'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0'
@@ -83,14 +82,16 @@ export const LinkModal = ({
     const iframeId = 'link-iframe'
     const existingIframe = document.getElementById(iframeId)
     if (!existingIframe) {
-      let additionalParamsStr = '';
-      if (additionalUrlParams) {
-        additionalParamsStr = Object.keys(additionalUrlParams).map(key =>
-          `&${key}=${additionalUrlParams[key]}
-        `).join('');
-      }
       const parentUrlEncoded = encodeURIComponent(window.location.href);
-      let urlWithParams = `${url}?jwt=${jwt}&accountId=${accountId}&parentUrlEncoded=${parentUrlEncoded}${additionalParamsStr}`;
+      const urlParamsArray = [['jwt', jwt], ['accountId', accountId], ['parentUrlEncoded', parentUrlEncoded], ...Object.entries(additionalUrlParams ?? {})]
+        .filter(([key, value]) => value);
+      let urlParams = urlParamsArray.join('&');
+      if (url.includes('?')) {
+        urlParams = `&${urlParams}`;
+      } else if (urlParams.length > 0) {
+        urlParams = `?${urlParams}`;
+      }
+      let urlWithParams = `${url}${urlParams}`;
       if (oauthConnectedAccount) {
         urlWithParams += `&${OAUTH_QUERY_PARAM}=${oauthConnectedAccount}`;
       }
@@ -137,8 +138,15 @@ export const LinkModal = ({
     } else if (event?.data?.type === 'redirect') {
       window.location.replace(event.data.targetUrl);
     } else {
+      let urlParams = Object.entries((event.data.extraUrlParams ?? {})).map(([key, value]) => `${key}=${value}`).join('&');
+      if (urlParams.length > 0) {
+        urlParams = `?${urlParams}`;
+      }
+      console.log('got these extra params: ');
+      console.log(event.data.extraUrlParams);
+      console.log(`built url using them: ${new URL(`${EVENT_MESSAGES[event.data.type]}${urlParams}`, url).href}`);
       createIframe(
-        new URL(EVENT_MESSAGES[event.data.type], url).href,
+        new URL(`${EVENT_MESSAGES[event.data.type]}${urlParams}`, url).href,
         event.data.accountId,
         event.data.oauthConnectedAccount
       );

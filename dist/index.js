@@ -7,10 +7,11 @@ var EVENT_MESSAGES = {
   cryptoSavings: "crypto-savings",
   withdrawAssets: "withdraw-assets",
   close: 'blockmate-iframe-close',
-  redirect: 'redirect'
+  redirect: 'redirect',
+  deposit: 'deposit'
 };
 var TRUSTED_ORIGINS = ['https://link.blockmate.io', 'https://link-dev-ovh.blockmate.io', 'https://link-cs.blockmate.io', 'http://localhost:3000'];
-var handleOpen = function handleOpen(message, accountId, oauthConnectedAccount) {
+var handleOpen = function handleOpen(message, accountId, oauthConnectedAccount, extraUrlParams) {
   if (message === void 0) {
     message = '';
   }
@@ -20,7 +21,8 @@ var handleOpen = function handleOpen(message, accountId, oauthConnectedAccount) 
   window.parent.postMessage({
     type: message,
     accountId: accountId,
-    oauthConnectedAccount: oauthConnectedAccount
+    oauthConnectedAccount: oauthConnectedAccount,
+    extraUrlParams: extraUrlParams
   }, '*');
 };
 var handleClose = function handleClose(endResult) {
@@ -68,21 +70,24 @@ var LinkModal = function LinkModal(_ref) {
       }
     }, 500);
   };
-  if (!jwt) return null;
   var body = document.querySelector('body');
   var iframeStyle = 'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0';
   var createIframe = function createIframe(url, accountId, oauthConnectedAccount) {
     var iframeId = 'link-iframe';
     var existingIframe = document.getElementById(iframeId);
     if (!existingIframe) {
-      var additionalParamsStr = '';
-      if (additionalUrlParams) {
-        additionalParamsStr = Object.keys(additionalUrlParams).map(function (key) {
-          return "&" + key + "=" + additionalUrlParams[key] + "\n        ";
-        }).join('');
-      }
       var parentUrlEncoded = encodeURIComponent(window.location.href);
-      var urlWithParams = url + "?jwt=" + jwt + "&accountId=" + accountId + "&parentUrlEncoded=" + parentUrlEncoded + additionalParamsStr;
+      var urlParamsArray = [['jwt', jwt], ['accountId', accountId], ['parentUrlEncoded', parentUrlEncoded]].concat(Object.entries(additionalUrlParams != null ? additionalUrlParams : {})).filter(function (_ref2) {
+        var value = _ref2[1];
+        return value;
+      });
+      var urlParams = urlParamsArray.join('&');
+      if (url.includes('?')) {
+        urlParams = "&" + urlParams;
+      } else if (urlParams.length > 0) {
+        urlParams = "?" + urlParams;
+      }
+      var urlWithParams = "" + url + urlParams;
       if (oauthConnectedAccount) {
         urlWithParams += "&" + OAUTH_QUERY_PARAM + "=" + oauthConnectedAccount;
       }
@@ -123,7 +128,19 @@ var LinkModal = function LinkModal(_ref) {
     } else if ((event === null || event === void 0 ? void 0 : (_event$data4 = event.data) === null || _event$data4 === void 0 ? void 0 : _event$data4.type) === 'redirect') {
       window.location.replace(event.data.targetUrl);
     } else {
-      createIframe(new URL(EVENT_MESSAGES[event.data.type], url).href, event.data.accountId, event.data.oauthConnectedAccount);
+      var _event$data$extraUrlP;
+      var urlParams = Object.entries((_event$data$extraUrlP = event.data.extraUrlParams) != null ? _event$data$extraUrlP : {}).map(function (_ref3) {
+        var key = _ref3[0],
+          value = _ref3[1];
+        return key + "=" + value;
+      }).join('&');
+      if (urlParams.length > 0) {
+        urlParams = "?" + urlParams;
+      }
+      console.log('got these extra params: ');
+      console.log(event.data.extraUrlParams);
+      console.log("built url using them: " + new URL("" + EVENT_MESSAGES[event.data.type] + urlParams, url).href);
+      createIframe(new URL("" + EVENT_MESSAGES[event.data.type] + urlParams, url).href, event.data.accountId, event.data.oauthConnectedAccount);
     }
   };
   return null;
