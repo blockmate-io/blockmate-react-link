@@ -30,7 +30,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { handleClose, handleOpen, LinkModal } from 'blockmate-react-link'
 
-const YourConnectComponent = ({user_jwt_token}) => {
+const YourConnectComponent = () => {
     return (
       <>
         <LinkModal url="https://link.blockmate.io" />
