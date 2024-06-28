@@ -47,6 +47,7 @@ var LinkModal = function LinkModal(_ref) {
     additionalUrlParams = _ref$additionalUrlPar === void 0 ? null : _ref$additionalUrlPar;
   var OAUTH_QUERY_PARAM = 'oauthConnectedAccount';
   var OAUTH_LOCAL_STORAGE_KEY = 'oauth_connected_account';
+  var DEPOSIT_OAUTH_SUCCESS_STEP = 'oauth_success';
   var oauthPollingInterval;
   var startOauthSuccessPolling = function startOauthSuccessPolling() {
     oauthPollingInterval = setInterval(function () {
@@ -65,23 +66,33 @@ var LinkModal = function LinkModal(_ref) {
       var currentUrl = new URL(window.location.href);
       var oauthQueryParamDeletedAlready = !currentUrl.searchParams.has(OAUTH_QUERY_PARAM);
       if (oauthConnectedAccount && oauthQueryParamDeletedAlready) {
-        createIframe(new URL(EVENT_MESSAGES.linkConnect, url).href, undefined, oauthConnectedAccount);
+        var path = EVENT_MESSAGES.linkConnect;
+        var step;
+        if (currentUrl.searchParams.has('deposit_id')) {
+          path = EVENT_MESSAGES.deposit;
+          step = DEPOSIT_OAUTH_SUCCESS_STEP;
+        }
+        createIframe(new URL(path, url).href, undefined, oauthConnectedAccount, step);
         localStorage.removeItem(OAUTH_LOCAL_STORAGE_KEY);
       }
     }, 500);
   };
   var body = document.querySelector('body');
   var iframeStyle = 'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0';
-  var createIframe = function createIframe(url, accountId, oauthConnectedAccount) {
+  var createIframe = function createIframe(url, accountId, oauthConnectedAccount, step) {
     var iframeId = 'link-iframe';
     var existingIframe = document.getElementById(iframeId);
     if (!existingIframe) {
       var parentUrlEncoded = encodeURIComponent(window.location.href);
-      var urlParamsArray = [['jwt', jwt], ['accountId', accountId], ['parentUrlEncoded', parentUrlEncoded]].concat(Object.entries(additionalUrlParams != null ? additionalUrlParams : {})).filter(function (_ref2) {
+      var urlParamsArray = [['jwt', jwt], ['accountId', accountId], ['parentUrlEncoded', parentUrlEncoded], ['step', step]].concat(Object.entries(additionalUrlParams != null ? additionalUrlParams : {})).filter(function (_ref2) {
         var value = _ref2[1];
         return value;
       });
-      var urlParams = urlParamsArray.join('&');
+      var urlParams = urlParamsArray.map(function (_ref3) {
+        var key = _ref3[0],
+          value = _ref3[1];
+        return key + "=" + value;
+      }).join('&');
       if (url.includes('?')) {
         urlParams = "&" + urlParams;
       } else if (urlParams.length > 0) {
@@ -129,17 +140,14 @@ var LinkModal = function LinkModal(_ref) {
       window.location.replace(event.data.targetUrl);
     } else {
       var _event$data$extraUrlP;
-      var urlParams = Object.entries((_event$data$extraUrlP = event.data.extraUrlParams) != null ? _event$data$extraUrlP : {}).map(function (_ref3) {
-        var key = _ref3[0],
-          value = _ref3[1];
+      var urlParams = Object.entries((_event$data$extraUrlP = event.data.extraUrlParams) != null ? _event$data$extraUrlP : {}).map(function (_ref4) {
+        var key = _ref4[0],
+          value = _ref4[1];
         return key + "=" + value;
       }).join('&');
       if (urlParams.length > 0) {
         urlParams = "?" + urlParams;
       }
-      console.log('got these extra params: ');
-      console.log(event.data.extraUrlParams);
-      console.log("built url using them: " + new URL("" + EVENT_MESSAGES[event.data.type] + urlParams, url).href);
       createIframe(new URL("" + EVENT_MESSAGES[event.data.type] + urlParams, url).href, event.data.accountId, event.data.oauthConnectedAccount);
     }
   };

@@ -41,6 +41,7 @@ export const LinkModal = ({
 }) => {
   const OAUTH_QUERY_PARAM = 'oauthConnectedAccount';
   const OAUTH_LOCAL_STORAGE_KEY = 'oauth_connected_account';
+  const DEPOSIT_OAUTH_SUCCESS_STEP = 'oauth_success';
   let oauthPollingInterval;
 
   // For oauth
@@ -64,10 +65,17 @@ export const LinkModal = ({
       const currentUrl = new URL(window.location.href);
       const oauthQueryParamDeletedAlready = !currentUrl.searchParams.has(OAUTH_QUERY_PARAM);
       if (oauthConnectedAccount && oauthQueryParamDeletedAlready) {
+        let path = EVENT_MESSAGES.linkConnect;
+        let step;
+        if (currentUrl.searchParams.has('deposit_id')) {
+          path = EVENT_MESSAGES.deposit;
+          step = DEPOSIT_OAUTH_SUCCESS_STEP;
+        }
         createIframe(
-          new URL(EVENT_MESSAGES.linkConnect, url).href,
+          new URL(path, url).href,
           undefined,
-          oauthConnectedAccount
+          oauthConnectedAccount,
+          step
         );
         localStorage.removeItem(OAUTH_LOCAL_STORAGE_KEY);
       }
@@ -78,14 +86,19 @@ export const LinkModal = ({
   const iframeStyle =
     'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0'
 
-  const createIframe = (url, accountId, oauthConnectedAccount) => {
+  const createIframe = (url, accountId, oauthConnectedAccount, step) => {
     const iframeId = 'link-iframe'
     const existingIframe = document.getElementById(iframeId)
     if (!existingIframe) {
       const parentUrlEncoded = encodeURIComponent(window.location.href);
-      const urlParamsArray = [['jwt', jwt], ['accountId', accountId], ['parentUrlEncoded', parentUrlEncoded], ...Object.entries(additionalUrlParams ?? {})]
-        .filter(([key, value]) => value);
-      let urlParams = urlParamsArray.join('&');
+      const urlParamsArray = [
+        ['jwt', jwt],
+        ['accountId', accountId],
+        ['parentUrlEncoded', parentUrlEncoded],
+        ['step', step],
+        ...Object.entries(additionalUrlParams ?? {})
+      ].filter(([key, value]) => value);
+      let urlParams = urlParamsArray.map(([key, value]) => `${key}=${value}`).join('&');
       if (url.includes('?')) {
         urlParams = `&${urlParams}`;
       } else if (urlParams.length > 0) {
@@ -142,9 +155,6 @@ export const LinkModal = ({
       if (urlParams.length > 0) {
         urlParams = `?${urlParams}`;
       }
-      console.log('got these extra params: ');
-      console.log(event.data.extraUrlParams);
-      console.log(`built url using them: ${new URL(`${EVENT_MESSAGES[event.data.type]}${urlParams}`, url).href}`);
       createIframe(
         new URL(`${EVENT_MESSAGES[event.data.type]}${urlParams}`, url).href,
         event.data.accountId,
