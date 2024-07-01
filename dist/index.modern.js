@@ -53,9 +53,11 @@ var LinkModal = function LinkModal(_ref) {
   var OAUTH_QUERY_PARAM = 'oauthConnectedAccount';
   var OAUTH_LOCAL_STORAGE_KEY = 'oauth_connected_account';
   var DEPOSIT_OAUTH_SUCCESS_STEP = 'oauth_success';
-  var oauthPollingInterval;
+  var DEPOSIT_ID_PARAM = 'deposit_id';
+  var DEPOSIT_SUCCESS_PARAM = 'success';
+  var DEPOSIT_ERROR_STORAGE_KEY = 'deposit_error';
   var startOauthSuccessPolling = function startOauthSuccessPolling() {
-    oauthPollingInterval = setInterval(function () {
+    var oauthPollingInterval = setInterval(function () {
       var params = new URLSearchParams(window.location.search);
       var maybeOauthConnectedAccount = params.get(OAUTH_QUERY_PARAM);
       if (maybeOauthConnectedAccount) {
@@ -65,15 +67,39 @@ var LinkModal = function LinkModal(_ref) {
       }
     }, 500);
   };
+  var startDepositSuccessPolling = function startDepositSuccessPolling() {
+    var depositSuccessPollingInterval = setInterval(function () {
+      var params = new URLSearchParams(window.location.search);
+      var maybeDepositIdParam = params.get(DEPOSIT_ID_PARAM);
+      var maybeSuccessParam = params.get(DEPOSIT_SUCCESS_PARAM);
+      if (!maybeDepositIdParam || !['true', 'false'].includes(maybeSuccessParam)) {
+        return;
+      }
+      if (maybeSuccessParam === 'true') {
+        localStorage.setItem(DEPOSIT_ERROR_STORAGE_KEY, '');
+      } else if (maybeSuccessParam === 'false') {
+        var detailParam = params.get('detail');
+        localStorage.setItem(DEPOSIT_ERROR_STORAGE_KEY, detailParam);
+      }
+      params["delete"](DEPOSIT_SUCCESS_PARAM);
+      params["delete"]('detail');
+      location.replace("" + window.location.origin + window.location.pathname + "?" + params.toString());
+    }, 500);
+  };
   var startLocalStoragePolling = function startLocalStoragePolling() {
     var localStoragePollingInterval = setInterval(function () {
       var oauthConnectedAccount = localStorage.getItem(OAUTH_LOCAL_STORAGE_KEY);
       var currentUrl = new URL(window.location.href);
       var oauthQueryParamDeletedAlready = !currentUrl.searchParams.has(OAUTH_QUERY_PARAM);
-      if (oauthConnectedAccount && oauthQueryParamDeletedAlready) {
+      var depositError = localStorage.getItem(DEPOSIT_ERROR_STORAGE_KEY);
+      var depositErrorParamDeletedAlready = !currentUrl.searchParams.has(DEPOSIT_SUCCESS_PARAM);
+      if (depositErrorParamDeletedAlready && depositError) {
+        createIframe(new URL(EVENT_MESSAGES.deposit, url).href, undefined, undefined, undefined, depositError);
+        localStorage.removeItem(DEPOSIT_ERROR_STORAGE_KEY);
+      } else if (oauthConnectedAccount && oauthQueryParamDeletedAlready) {
         var path = EVENT_MESSAGES.linkConnect;
         var step;
-        if (currentUrl.searchParams.has('deposit_id')) {
+        if (currentUrl.searchParams.has(DEPOSIT_ID_PARAM)) {
           path = EVENT_MESSAGES.deposit;
           step = DEPOSIT_OAUTH_SUCCESS_STEP;
         }
@@ -84,7 +110,7 @@ var LinkModal = function LinkModal(_ref) {
   };
   var body = document.querySelector('body');
   var iframeStyle = 'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0';
-  var createIframe = function createIframe(url, accountId, oauthConnectedAccount, step) {
+  var createIframe = function createIframe(url, accountId, oauthConnectedAccount, step, depositError) {
     var iframeId = 'link-iframe';
     var existingIframe = document.getElementById(iframeId);
     if (!existingIframe) {
@@ -93,7 +119,7 @@ var LinkModal = function LinkModal(_ref) {
         var value = _ref2[1];
         return value;
       });
-      var urlParamsArray = [['jwt', jwt], ['accountId', accountId], ['parentUrlEncoded', parentUrlEncoded], ['step', step]].concat(merchantUrlParams, Object.entries(additionalUrlParams != null ? additionalUrlParams : {})).filter(function (_ref3) {
+      var urlParamsArray = [['jwt', jwt], ['accountId', accountId], ['parentUrlEncoded', parentUrlEncoded], ['step', step], ['depositError', depositError]].concat(merchantUrlParams, Object.entries(additionalUrlParams != null ? additionalUrlParams : {})).filter(function (_ref3) {
         var value = _ref3[1];
         return value;
       });
@@ -133,6 +159,7 @@ var LinkModal = function LinkModal(_ref) {
       cleanupActions[endResult]();
     }
   };
+  startDepositSuccessPolling();
   startOauthSuccessPolling();
   startLocalStoragePolling();
   window.onmessage = function (event) {
