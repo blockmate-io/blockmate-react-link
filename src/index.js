@@ -23,11 +23,11 @@ export const handleOpen = (message = '', accountId, oauthConnectedAccount, extra
     message = 'linkConnect';
   }
   window.parent.postMessage({ type: message, accountId, oauthConnectedAccount, extraUrlParams }, '*');
-}
+};
 
 export const handleClose = (endResult) => {
   window.parent.postMessage({ type: 'close', endResult }, '*');
-}
+};
 
 export const handleRedirect = (targetUrl) => {
   window.parent.postMessage({ type: 'redirect', targetUrl }, '*');
@@ -37,7 +37,11 @@ export const LinkModal = ({
   jwt,
   url = 'https://link.blockmate.io/',
   cleanupActions = {},
-  additionalUrlParams= null
+  additionalUrlParams= null,
+  merchantInfo = {
+    description: 'ExampleMerchant',
+    icon: 'https://api.blockmate.io/v1/onchain/static/bitcoin.png',
+  },
 }) => {
   const OAUTH_QUERY_PARAM = 'oauthConnectedAccount';
   const OAUTH_LOCAL_STORAGE_KEY = 'oauth_connected_account';
@@ -75,27 +79,30 @@ export const LinkModal = ({
           new URL(path, url).href,
           undefined,
           oauthConnectedAccount,
-          step
+          step,
         );
         localStorage.removeItem(OAUTH_LOCAL_STORAGE_KEY);
       }
     }, 500);
   };
 
-  const body = document.querySelector('body')
+  const body = document.querySelector('body');
   const iframeStyle =
-    'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0'
+    'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0';
 
   const createIframe = (url, accountId, oauthConnectedAccount, step) => {
-    const iframeId = 'link-iframe'
-    const existingIframe = document.getElementById(iframeId)
+    const iframeId = 'link-iframe';
+    const existingIframe = document.getElementById(iframeId);
     if (!existingIframe) {
       const parentUrlEncoded = encodeURIComponent(window.location.href);
+      const merchantUrlParams = [['merchantDescription', merchantInfo.description], ['merchantIcon', encodeURIComponent(merchantInfo.icon)]]
+        .filter(([_, value]) => value);
       const urlParamsArray = [
         ['jwt', jwt],
         ['accountId', accountId],
         ['parentUrlEncoded', parentUrlEncoded],
         ['step', step],
+        ...merchantUrlParams,
         ...Object.entries(additionalUrlParams ?? {})
       ].filter(([key, value]) => value);
       let urlParams = urlParamsArray.map(([key, value]) => `${key}=${value}`).join('&');
@@ -109,34 +116,36 @@ export const LinkModal = ({
         urlWithParams += `&${OAUTH_QUERY_PARAM}=${oauthConnectedAccount}`;
       }
 
-      const iframe = document.createElement('iframe')
-      iframe.setAttribute('src', urlWithParams)
-      iframe.setAttribute('style', iframeStyle)
-      iframe.setAttribute('id', iframeId)
+      const iframe = document.createElement('iframe');
+      iframe.setAttribute('src', urlWithParams);
+      iframe.setAttribute('style', iframeStyle);
+      iframe.setAttribute('id', iframeId);
       iframe.setAttribute('allow', 'camera');  // For QR-code scanning
       body.appendChild(iframe);
     }
-  }
+  };
 
   const removeIframe = (event) => {
-    const iframe = document.querySelector('#link-iframe')
-    body.removeChild(iframe)
+    const iframe = document.querySelector('#link-iframe');
+    if (iframe) {
+      body.removeChild(iframe);
+    }
     if (event.data.url) {
-      window.location = event.data.url
+      window.location = event.data.url;
     }
 
     const endResult = event?.data?.endResult
     if (endResult && cleanupActions[endResult]) {
-      cleanupActions[endResult]()
+      cleanupActions[endResult]();
     }
-  }
+  };
 
   startOauthSuccessPolling();
   startLocalStoragePolling();
 
   window.onmessage = function (event) {
     if (!Object.hasOwn(EVENT_MESSAGES, event.data.type)) {
-      return null
+      return null;
     }
 
     // These actions can only be called from within the iframe, check origin as they can perform redirects of the parent
@@ -158,10 +167,10 @@ export const LinkModal = ({
       createIframe(
         new URL(`${EVENT_MESSAGES[event.data.type]}${urlParams}`, url).href,
         event.data.accountId,
-        event.data.oauthConnectedAccount
+        event.data.oauthConnectedAccount,
       );
     }
-  }
+  };
 
-  return null
-}
+  return null;
+};
