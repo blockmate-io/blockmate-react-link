@@ -44,7 +44,12 @@ var LinkModal = function LinkModal(_ref) {
     _ref$cleanupActions = _ref.cleanupActions,
     cleanupActions = _ref$cleanupActions === void 0 ? {} : _ref$cleanupActions,
     _ref$additionalUrlPar = _ref.additionalUrlParams,
-    additionalUrlParams = _ref$additionalUrlPar === void 0 ? null : _ref$additionalUrlPar;
+    additionalUrlParams = _ref$additionalUrlPar === void 0 ? null : _ref$additionalUrlPar,
+    _ref$merchantInfo = _ref.merchantInfo,
+    merchantInfo = _ref$merchantInfo === void 0 ? {
+      description: 'ExampleMerchant',
+      icon: 'https://api.blockmate.io/v1/onchain/static/bitcoin.png'
+    } : _ref$merchantInfo;
   var OAUTH_QUERY_PARAM = 'oauthConnectedAccount';
   var OAUTH_LOCAL_STORAGE_KEY = 'oauth_connected_account';
   var DEPOSIT_OAUTH_SUCCESS_STEP = 'oauth_success';
@@ -84,13 +89,17 @@ var LinkModal = function LinkModal(_ref) {
     var existingIframe = document.getElementById(iframeId);
     if (!existingIframe) {
       var parentUrlEncoded = encodeURIComponent(window.location.href);
-      var urlParamsArray = [['jwt', jwt], ['accountId', accountId], ['parentUrlEncoded', parentUrlEncoded], ['step', step]].concat(Object.entries(additionalUrlParams != null ? additionalUrlParams : {})).filter(function (_ref2) {
+      var merchantUrlParams = [['merchantDescription', merchantInfo.description], ['merchantIcon', encodeURIComponent(merchantInfo.icon)]].filter(function (_ref2) {
         var value = _ref2[1];
         return value;
       });
-      var urlParams = urlParamsArray.map(function (_ref3) {
-        var key = _ref3[0],
-          value = _ref3[1];
+      var urlParamsArray = [['jwt', jwt], ['accountId', accountId], ['parentUrlEncoded', parentUrlEncoded], ['step', step]].concat(merchantUrlParams, Object.entries(additionalUrlParams != null ? additionalUrlParams : {})).filter(function (_ref3) {
+        var value = _ref3[1];
+        return value;
+      });
+      var urlParams = urlParamsArray.map(function (_ref4) {
+        var key = _ref4[0],
+          value = _ref4[1];
         return key + "=" + value;
       }).join('&');
       if (url.includes('?')) {
@@ -113,7 +122,9 @@ var LinkModal = function LinkModal(_ref) {
   var removeIframe = function removeIframe(event) {
     var _event$data;
     var iframe = document.querySelector('#link-iframe');
-    body.removeChild(iframe);
+    if (iframe) {
+      body.removeChild(iframe);
+    }
     if (event.data.url) {
       window.location = event.data.url;
     }
@@ -140,9 +151,9 @@ var LinkModal = function LinkModal(_ref) {
       window.location.replace(event.data.targetUrl);
     } else {
       var _event$data$extraUrlP;
-      var urlParams = Object.entries((_event$data$extraUrlP = event.data.extraUrlParams) != null ? _event$data$extraUrlP : {}).map(function (_ref4) {
-        var key = _ref4[0],
-          value = _ref4[1];
+      var urlParams = Object.entries((_event$data$extraUrlP = event.data.extraUrlParams) != null ? _event$data$extraUrlP : {}).map(function (_ref5) {
+        var key = _ref5[0],
+          value = _ref5[1];
         return key + "=" + value;
       }).join('&');
       if (urlParams.length > 0) {

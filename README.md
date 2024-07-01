@@ -33,7 +33,13 @@ import { handleClose, handleOpen, LinkModal } from 'blockmate-react-link'
 const YourConnectComponent = () => {
     return (
       <>
-        <LinkModal url="https://link.blockmate.io" />
+        <LinkModal
+          url="https://link.blockmate.io"
+          merchantInfo={{
+            description: 'YourCompanyName',
+            icon: 'https://your-company-name.com/logo.png'
+          }}
+        />
         <div>Test APP</div>
         <button onClick={handleOpen("deposit", undefined, undefined, depositId)}>Open</button>
       </>
