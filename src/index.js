@@ -46,11 +46,13 @@ export const LinkModal = ({
   const OAUTH_QUERY_PARAM = 'oauthConnectedAccount';
   const OAUTH_LOCAL_STORAGE_KEY = 'oauth_connected_account';
   const DEPOSIT_OAUTH_SUCCESS_STEP = 'oauth_success';
-  let oauthPollingInterval;
+  const DEPOSIT_ID_PARAM = 'deposit_id';
+  const DEPOSIT_SUCCESS_PARAM = 'success';
+  const DEPOSIT_ERROR_STORAGE_KEY = 'deposit_error';
 
   // For oauth
   const startOauthSuccessPolling = () => {
-    oauthPollingInterval = setInterval(() => {
+    const oauthPollingInterval = setInterval(() => {
       const params = new URLSearchParams(window.location.search);
       const maybeOauthConnectedAccount = params.get(OAUTH_QUERY_PARAM);
       if (maybeOauthConnectedAccount) {
@@ -62,16 +64,48 @@ export const LinkModal = ({
     }, 500);
   };
 
+  const startDepositSuccessPolling = () => {
+    const depositSuccessPollingInterval = setInterval(() => {
+      const params = new URLSearchParams(window.location.search);
+      const maybeDepositIdParam = params.get(DEPOSIT_ID_PARAM);
+      const maybeSuccessParam = params.get(DEPOSIT_SUCCESS_PARAM);
+      if (!maybeDepositIdParam || !['true', 'false'].includes(maybeSuccessParam)) {
+        return;
+      }
+      if (maybeSuccessParam === 'true') {
+        localStorage.setItem(DEPOSIT_ERROR_STORAGE_KEY, '');
+      } else if (maybeSuccessParam === 'false') {
+        const detailParam = params.get('detail');
+        localStorage.setItem(DEPOSIT_ERROR_STORAGE_KEY, detailParam);
+      }
+      params.delete(DEPOSIT_SUCCESS_PARAM);
+      params.delete('detail');
+      location.replace(`${window.location.origin}${window.location.pathname}?${params.toString()}`);
+    }, 500);
+  };
+
   // For oauth
   const startLocalStoragePolling = () => {
     const localStoragePollingInterval = setInterval(() => {
       const oauthConnectedAccount = localStorage.getItem(OAUTH_LOCAL_STORAGE_KEY);
       const currentUrl = new URL(window.location.href);
       const oauthQueryParamDeletedAlready = !currentUrl.searchParams.has(OAUTH_QUERY_PARAM);
-      if (oauthConnectedAccount && oauthQueryParamDeletedAlready) {
+      const depositError = localStorage.getItem(DEPOSIT_ERROR_STORAGE_KEY);
+      const depositErrorParamDeletedAlready = !currentUrl.searchParams.has(DEPOSIT_SUCCESS_PARAM);
+      if (depositErrorParamDeletedAlready && depositError) {
+        createIframe(
+          new URL(EVENT_MESSAGES.deposit, url).href,
+          undefined,
+          undefined,
+          undefined,
+          depositError
+        );
+        localStorage.removeItem(DEPOSIT_ERROR_STORAGE_KEY);
+      }
+      else if (oauthConnectedAccount && oauthQueryParamDeletedAlready) {
         let path = EVENT_MESSAGES.linkConnect;
         let step;
-        if (currentUrl.searchParams.has('deposit_id')) {
+        if (currentUrl.searchParams.has(DEPOSIT_ID_PARAM)) {
           path = EVENT_MESSAGES.deposit;
           step = DEPOSIT_OAUTH_SUCCESS_STEP;
         }
@@ -90,7 +124,7 @@ export const LinkModal = ({
   const iframeStyle =
     'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0';
 
-  const createIframe = (url, accountId, oauthConnectedAccount, step) => {
+  const createIframe = (url, accountId, oauthConnectedAccount, step, depositError) => {
     const iframeId = 'link-iframe';
     const existingIframe = document.getElementById(iframeId);
     if (!existingIframe) {
@@ -102,6 +136,7 @@ export const LinkModal = ({
         ['accountId', accountId],
         ['parentUrlEncoded', parentUrlEncoded],
         ['step', step],
+        ['depositError', depositError],
         ...merchantUrlParams,
         ...Object.entries(additionalUrlParams ?? {})
       ].filter(([key, value]) => value);
@@ -140,6 +175,7 @@ export const LinkModal = ({
     }
   };
 
+  startDepositSuccessPolling();
   startOauthSuccessPolling();
   startLocalStoragePolling();
 
