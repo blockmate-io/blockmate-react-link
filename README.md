@@ -19,39 +19,9 @@ Application requires correct jwt token in order to be used.
 
 ## Usage
 
-### Deposits
-If you want to use this library for Blockmate deposit capabilities, you will only need to
-include the `LinkModal` component in your application for accommodating an iframe.
-To open the modal for deposits, use the `handleOpen` function as shown in the following
-example:
-
-```jsx
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { handleClose, handleOpen, LinkModal } from 'blockmate-react-link'
-
-const YourConnectComponent = () => {
-    return (
-      <>
-        <LinkModal
-          url="https://link.blockmate.io"
-          merchantInfo={{
-            description: 'YourCompanyName',
-            icon: 'https://your-company-name.com/logo.png'
-          }}
-        />
-        <div>Test APP</div>
-        <button onClick={handleOpen("deposit", undefined, undefined, depositId)}>Open</button>
-      </>
-    )
-}
-
-
-export default YourConnectComponent
-```
-
 ### General use
-For other use-cases, you might need to handle tokens the following way:
+If you only want to use this library for deposit capabilities, you can skip to the next section.
+For a general use the integration can be done the following way:
 ```jsx
 
 import React, { useState, useEffect } from "react";
@@ -94,6 +64,62 @@ const YourConnectComponent = ({user_jwt_token}) => {
 export default YourConnectComponent
 ```
 
+### Deposits
+If you want to use this library for Blockmate deposit capabilities, you will only need to
+include the `LinkModal` component in your application for accommodating an iframe.
+You will need to provide a jwt token, a link to your logo and a name of your company
+that you wish to have displayed in modals.
+
+The jwt token can be obtained using your API key using the following script:
+```js
+const API_KEY = "PASTE-YOUR-API-KEY-HERE";
+fetch("https://api.blockmate.io/v1/auth/developer", {
+    headers: {
+      "X-API-KEY": FAKE_API_KEY
+    }
+  }
+).then(res =>
+  res.json()
+).then(data =>
+  console.log(data.token)
+);
+```
+
+To open the modal for deposits, use the `handleOpen` function as shown in the following
+example:
+
+```jsx
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { handleClose, handleOpen, LinkModal } from 'blockmate-react-link'
+
+const YourConnectComponent = () => {
+    return (
+      <>
+        <LinkModal
+          url="https://link.blockmate.io"
+          jwt="JWT-OBTAINED-IN-PREVIOUS-STEP" // Replace with your jwt token
+          merchantInfo={{
+            description: 'YourCompanyName',
+            icon: 'https://your-company-name.com/logo.png'
+          }}
+        />
+        <div>Test APP</div>
+        <button onClick={{
+          depositId,
+          fiatAmount: "100", // Replace with fiat amount
+          fiatCurrency: "USD", // Specify currency ("USD" / "EUR" / "CZK")
+        }}>
+          Open
+        </button>
+      </>
+    )
+}
+
+
+export default YourConnectComponent
+```
+**Note:** The `depositId` in this snippet comes from the call to `https://api.blockmate.io/v1/exchange/deposit/initialize`.
 
 ## License
 
