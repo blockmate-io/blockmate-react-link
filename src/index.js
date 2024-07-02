@@ -68,12 +68,12 @@ export const LinkModal = ({
     const depositSuccessPollingInterval = setInterval(() => {
       const params = new URLSearchParams(window.location.search);
       const maybeDepositIdParam = params.get(DEPOSIT_ID_PARAM);
-      const maybeSuccessParam = params.get(DEPOSIT_SUCCESS_PARAM);
+      const maybeSuccessParam = String(params.get(DEPOSIT_SUCCESS_PARAM)).toLowerCase();
       if (!maybeDepositIdParam || !['true', 'false'].includes(maybeSuccessParam)) {
         return;
       }
       if (maybeSuccessParam === 'true') {
-        localStorage.setItem(DEPOSIT_ERROR_STORAGE_KEY, '');
+        localStorage.setItem(DEPOSIT_ERROR_STORAGE_KEY, 'success');
       } else if (maybeSuccessParam === 'false') {
         const detailParam = params.get('detail');
         localStorage.setItem(DEPOSIT_ERROR_STORAGE_KEY, detailParam);
@@ -92,7 +92,7 @@ export const LinkModal = ({
       const oauthQueryParamDeletedAlready = !currentUrl.searchParams.has(OAUTH_QUERY_PARAM);
       const depositError = localStorage.getItem(DEPOSIT_ERROR_STORAGE_KEY);
       const depositErrorParamDeletedAlready = !currentUrl.searchParams.has(DEPOSIT_SUCCESS_PARAM);
-      if (depositErrorParamDeletedAlready && depositError) {
+      if (depositErrorParamDeletedAlready && typeof(depositError) === 'string') {
         createIframe(
           new URL(EVENT_MESSAGES.deposit, url).href,
           undefined,

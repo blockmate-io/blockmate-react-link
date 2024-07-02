@@ -71,12 +71,12 @@ var LinkModal = function LinkModal(_ref) {
     var depositSuccessPollingInterval = setInterval(function () {
       var params = new URLSearchParams(window.location.search);
       var maybeDepositIdParam = params.get(DEPOSIT_ID_PARAM);
-      var maybeSuccessParam = params.get(DEPOSIT_SUCCESS_PARAM);
+      var maybeSuccessParam = String(params.get(DEPOSIT_SUCCESS_PARAM)).toLowerCase();
       if (!maybeDepositIdParam || !['true', 'false'].includes(maybeSuccessParam)) {
         return;
       }
       if (maybeSuccessParam === 'true') {
-        localStorage.setItem(DEPOSIT_ERROR_STORAGE_KEY, '');
+        localStorage.setItem(DEPOSIT_ERROR_STORAGE_KEY, 'success');
       } else if (maybeSuccessParam === 'false') {
         var detailParam = params.get('detail');
         localStorage.setItem(DEPOSIT_ERROR_STORAGE_KEY, detailParam);
@@ -93,7 +93,7 @@ var LinkModal = function LinkModal(_ref) {
       var oauthQueryParamDeletedAlready = !currentUrl.searchParams.has(OAUTH_QUERY_PARAM);
       var depositError = localStorage.getItem(DEPOSIT_ERROR_STORAGE_KEY);
       var depositErrorParamDeletedAlready = !currentUrl.searchParams.has(DEPOSIT_SUCCESS_PARAM);
-      if (depositErrorParamDeletedAlready && depositError) {
+      if (depositErrorParamDeletedAlready && typeof depositError === 'string') {
         createIframe(new URL(EVENT_MESSAGES.deposit, url).href, undefined, undefined, undefined, depositError);
         localStorage.removeItem(DEPOSIT_ERROR_STORAGE_KEY);
       } else if (oauthConnectedAccount && oauthQueryParamDeletedAlready) {
