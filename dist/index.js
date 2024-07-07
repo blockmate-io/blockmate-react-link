@@ -56,6 +56,7 @@ var LinkModal = function LinkModal(_ref) {
   var DEPOSIT_ID_PARAM = 'deposit_id';
   var DEPOSIT_SUCCESS_PARAM = 'success';
   var DEPOSIT_ERROR_STORAGE_KEY = 'deposit_error';
+  var DEPOSIT_JWT_LOCAL_STORAGE_KEY = 'deposit_jwt';
   var startOauthSuccessPolling = function startOauthSuccessPolling() {
     var oauthPollingInterval = setInterval(function () {
       var params = new URLSearchParams(window.location.search);
@@ -119,7 +120,8 @@ var LinkModal = function LinkModal(_ref) {
         var value = _ref2[1];
         return value;
       });
-      var urlParamsArray = [['jwt', jwt], ['accountId', accountId], ['parentUrlEncoded', parentUrlEncoded], ['step', step], ['depositError', depositError]].concat(merchantUrlParams, Object.entries(additionalUrlParams != null ? additionalUrlParams : {})).filter(function (_ref3) {
+      var token = jwt || localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY);
+      var urlParamsArray = [['jwt', token], ['accountId', accountId], ['parentUrlEncoded', parentUrlEncoded], ['step', step], ['depositError', depositError]].concat(merchantUrlParams, Object.entries(additionalUrlParams != null ? additionalUrlParams : {})).filter(function (_ref3) {
         var value = _ref3[1];
         return value;
       });
@@ -173,8 +175,10 @@ var LinkModal = function LinkModal(_ref) {
       }
     }
     if ((event === null || event === void 0 ? void 0 : (_event$data3 = event.data) === null || _event$data3 === void 0 ? void 0 : _event$data3.type) === 'close') {
+      localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
       removeIframe(event);
     } else if ((event === null || event === void 0 ? void 0 : (_event$data4 = event.data) === null || _event$data4 === void 0 ? void 0 : _event$data4.type) === 'redirect') {
+      localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
       window.location.replace(event.data.targetUrl);
     } else {
       var _event$data$extraUrlP;
@@ -187,6 +191,7 @@ var LinkModal = function LinkModal(_ref) {
         urlParams = "?" + urlParams;
       }
       createIframe(new URL("" + EVENT_MESSAGES[event.data.type] + urlParams, url).href, event.data.accountId, event.data.oauthConnectedAccount);
+      localStorage.removeItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY);
     }
   };
   return null;

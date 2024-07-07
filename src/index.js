@@ -49,6 +49,7 @@ export const LinkModal = ({
   const DEPOSIT_ID_PARAM = 'deposit_id';
   const DEPOSIT_SUCCESS_PARAM = 'success';
   const DEPOSIT_ERROR_STORAGE_KEY = 'deposit_error';
+  const DEPOSIT_JWT_LOCAL_STORAGE_KEY = 'deposit_jwt';
 
   // For oauth
   const startOauthSuccessPolling = () => {
@@ -131,8 +132,9 @@ export const LinkModal = ({
       const parentUrlEncoded = encodeURIComponent(window.location.href);
       const merchantUrlParams = [['merchantDescription', merchantInfo.description], ['merchantIcon', encodeURIComponent(merchantInfo.icon)]]
         .filter(([_, value]) => value);
+      const token = jwt || localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY);
       const urlParamsArray = [
-        ['jwt', jwt],
+        ['jwt', token],
         ['accountId', accountId],
         ['parentUrlEncoded', parentUrlEncoded],
         ['step', step],
@@ -192,8 +194,10 @@ export const LinkModal = ({
     }
 
     if (event?.data?.type === 'close') {
+      localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
       removeIframe(event);
     } else if (event?.data?.type === 'redirect') {
+      localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
       window.location.replace(event.data.targetUrl);
     } else {
       let urlParams = Object.entries((event.data.extraUrlParams ?? {})).map(([key, value]) => `${key}=${value}`).join('&');
@@ -205,6 +209,7 @@ export const LinkModal = ({
         event.data.accountId,
         event.data.oauthConnectedAccount,
       );
+      localStorage.removeItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY);
     }
   };
 
