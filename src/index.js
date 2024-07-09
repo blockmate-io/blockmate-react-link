@@ -133,12 +133,15 @@ export const LinkModal = ({
       const merchantUrlParams = [['merchantDescription', merchantInfo.description], ['merchantIcon', encodeURIComponent(merchantInfo.icon)]]
         .filter(([_, value]) => value);
       const token = jwt || localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY);
+      const params = new URLSearchParams(window.location.search);
+      const providerNameParam = params.get('providerName');
       const urlParamsArray = [
         ['jwt', token],
         ['accountId', accountId],
         ['parentUrlEncoded', parentUrlEncoded],
         ['step', step],
         ['depositError', depositError],
+        ['providerName', providerNameParam],
         ...merchantUrlParams,
         ...Object.entries(additionalUrlParams ?? {})
       ].filter(([key, value]) => value);

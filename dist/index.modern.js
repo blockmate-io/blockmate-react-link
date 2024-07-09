@@ -121,7 +121,9 @@ var LinkModal = function LinkModal(_ref) {
         return value;
       });
       var token = jwt || localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY);
-      var urlParamsArray = [['jwt', token], ['accountId', accountId], ['parentUrlEncoded', parentUrlEncoded], ['step', step], ['depositError', depositError]].concat(merchantUrlParams, Object.entries(additionalUrlParams != null ? additionalUrlParams : {})).filter(function (_ref3) {
+      var params = new URLSearchParams(window.location.search);
+      var providerNameParam = params.get('providerName');
+      var urlParamsArray = [['jwt', token], ['accountId', accountId], ['parentUrlEncoded', parentUrlEncoded], ['step', step], ['depositError', depositError], ['providerName', providerNameParam]].concat(merchantUrlParams, Object.entries(additionalUrlParams != null ? additionalUrlParams : {})).filter(function (_ref3) {
         var value = _ref3[1];
         return value;
       });
