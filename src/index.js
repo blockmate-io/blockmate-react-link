@@ -9,6 +9,7 @@ const EVENT_MESSAGES = {
   close: 'blockmate-iframe-close',
   redirect: 'redirect',
   deposit: 'deposit',
+  directDeposit: 'deposit-wallet-connect',
 }
 
 const TRUSTED_ORIGINS = [
@@ -209,8 +210,8 @@ export const LinkModal = ({
       }
       createIframe(
         new URL(`${EVENT_MESSAGES[event.data.type]}${urlParams}`, url).href,
-        event.data.accountId,
-        event.data.oauthConnectedAccount,
+        event.data?.accountId,
+        event.data?.oauthConnectedAccount,
       );
       localStorage.removeItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY);
     }
