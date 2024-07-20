@@ -8,7 +8,8 @@ var EVENT_MESSAGES = {
   withdrawAssets: "withdraw-assets",
   close: 'blockmate-iframe-close',
   redirect: 'redirect',
-  deposit: 'deposit'
+  deposit: 'deposit',
+  directDeposit: 'deposit-wallet-connect'
 };
 var TRUSTED_ORIGINS = ['https://link.blockmate.io', 'https://link-dev-ovh.blockmate.io', 'https://link-cs.blockmate.io', 'http://localhost:3000'];
 var handleOpen = function handleOpen(message, accountId, oauthConnectedAccount, extraUrlParams) {
@@ -183,7 +184,7 @@ var LinkModal = function LinkModal(_ref) {
       localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
       window.location.replace(event.data.targetUrl);
     } else {
-      var _event$data$extraUrlP;
+      var _event$data$extraUrlP, _event$data5, _event$data6;
       var urlParams = Object.entries((_event$data$extraUrlP = event.data.extraUrlParams) != null ? _event$data$extraUrlP : {}).map(function (_ref5) {
         var key = _ref5[0],
           value = _ref5[1];
@@ -192,7 +193,7 @@ var LinkModal = function LinkModal(_ref) {
       if (urlParams.length > 0) {
         urlParams = "?" + urlParams;
       }
-      createIframe(new URL("" + EVENT_MESSAGES[event.data.type] + urlParams, url).href, event.data.accountId, event.data.oauthConnectedAccount);
+      createIframe(new URL("" + EVENT_MESSAGES[event.data.type] + urlParams, url).href, (_event$data5 = event.data) === null || _event$data5 === void 0 ? void 0 : _event$data5.accountId, (_event$data6 = event.data) === null || _event$data6 === void 0 ? void 0 : _event$data6.oauthConnectedAccount);
       localStorage.removeItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY);
     }
   };
