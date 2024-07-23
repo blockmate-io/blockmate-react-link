@@ -8,7 +8,7 @@ const EVENT_MESSAGES = {
   withdrawAssets: `withdraw-assets`,
   close: 'blockmate-iframe-close',
   redirect: 'redirect',
-  deposit: 'deposit',
+  deposit: 'deposit-exchange',
   directDeposit: 'deposit-wallet-connect',
 }
 

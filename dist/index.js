@@ -8,7 +8,7 @@ var EVENT_MESSAGES = {
   withdrawAssets: "withdraw-assets",
   close: 'blockmate-iframe-close',
   redirect: 'redirect',
-  deposit: 'deposit',
+  deposit: 'deposit-exchange',
   directDeposit: 'deposit-wallet-connect'
 };
 var TRUSTED_ORIGINS = ['https://link.blockmate.io', 'https://link-dev-ovh.blockmate.io', 'https://link-cs.blockmate.io', 'http://localhost:3000'];
