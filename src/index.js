@@ -126,14 +126,14 @@ export const LinkModal = ({
   const iframeStyle =
     'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0';
 
-  const createIframe = (url, accountId, oauthConnectedAccount, step, depositError) => {
+  const createIframe = (url, accountId, oauthConnectedAccount, step, depositError, includeDefaultJwt = true) => {
     const iframeId = 'link-iframe';
     const existingIframe = document.getElementById(iframeId);
     if (!existingIframe) {
       const parentUrlEncoded = encodeURIComponent(window.location.href);
       const merchantUrlParams = [['merchantDescription', merchantInfo.description], ['merchantIcon', encodeURIComponent(merchantInfo.icon)]]
         .filter(([_, value]) => value);
-      const token = jwt || localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY);
+      const token = includeDefaultJwt && (jwt || localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY));
       const params = new URLSearchParams(window.location.search);
       const providerNameParam = params.get('providerName');
       const urlParamsArray = [
@@ -208,10 +208,14 @@ export const LinkModal = ({
       if (urlParams.length > 0) {
         urlParams = `?${urlParams}`;
       }
+      const includeDefaultJwt = !event.data.extraUrlParams?.jwt;
       createIframe(
         new URL(`${EVENT_MESSAGES[event.data.type]}${urlParams}`, url).href,
         event.data?.accountId,
         event.data?.oauthConnectedAccount,
+        undefined,
+        undefined,
+        includeDefaultJwt,
       );
       localStorage.removeItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY);
     }

@@ -112,7 +112,10 @@ var LinkModal = function LinkModal(_ref) {
   };
   var body = document.querySelector('body');
   var iframeStyle = 'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0';
-  var createIframe = function createIframe(url, accountId, oauthConnectedAccount, step, depositError) {
+  var createIframe = function createIframe(url, accountId, oauthConnectedAccount, step, depositError, includeDefaultJwt) {
+    if (includeDefaultJwt === void 0) {
+      includeDefaultJwt = true;
+    }
     var iframeId = 'link-iframe';
     var existingIframe = document.getElementById(iframeId);
     if (!existingIframe) {
@@ -121,7 +124,7 @@ var LinkModal = function LinkModal(_ref) {
         var value = _ref2[1];
         return value;
       });
-      var token = jwt || localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY);
+      var token = includeDefaultJwt && (jwt || localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY));
       var params = new URLSearchParams(window.location.search);
       var providerNameParam = params.get('providerName');
       var urlParamsArray = [['jwt', token], ['accountId', accountId], ['parentUrlEncoded', parentUrlEncoded], ['step', step], ['depositError', depositError], ['providerName', providerNameParam]].concat(merchantUrlParams, Object.entries(additionalUrlParams != null ? additionalUrlParams : {})).filter(function (_ref3) {
@@ -184,7 +187,7 @@ var LinkModal = function LinkModal(_ref) {
       localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
       window.location.replace(event.data.targetUrl);
     } else {
-      var _event$data$extraUrlP, _event$data5, _event$data6;
+      var _event$data$extraUrlP, _event$data$extraUrlP2, _event$data5, _event$data6;
       var urlParams = Object.entries((_event$data$extraUrlP = event.data.extraUrlParams) != null ? _event$data$extraUrlP : {}).map(function (_ref5) {
         var key = _ref5[0],
           value = _ref5[1];
@@ -193,7 +196,8 @@ var LinkModal = function LinkModal(_ref) {
       if (urlParams.length > 0) {
         urlParams = "?" + urlParams;
       }
-      createIframe(new URL("" + EVENT_MESSAGES[event.data.type] + urlParams, url).href, (_event$data5 = event.data) === null || _event$data5 === void 0 ? void 0 : _event$data5.accountId, (_event$data6 = event.data) === null || _event$data6 === void 0 ? void 0 : _event$data6.oauthConnectedAccount);
+      var includeDefaultJwt = !((_event$data$extraUrlP2 = event.data.extraUrlParams) !== null && _event$data$extraUrlP2 !== void 0 && _event$data$extraUrlP2.jwt);
+      createIframe(new URL("" + EVENT_MESSAGES[event.data.type] + urlParams, url).href, (_event$data5 = event.data) === null || _event$data5 === void 0 ? void 0 : _event$data5.accountId, (_event$data6 = event.data) === null || _event$data6 === void 0 ? void 0 : _event$data6.oauthConnectedAccount, undefined, undefined, includeDefaultJwt);
       localStorage.removeItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY);
     }
   };
