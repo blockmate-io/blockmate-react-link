@@ -34,7 +34,7 @@ export const handleRedirect = (targetUrl) => {
   window.parent.postMessage({ type: 'redirect', targetUrl }, '*');
 };
 
-export const LinkModal = ({
+export const createLinkModal = ({
   jwt,
   url = 'https://link.blockmate.io/',
   cleanupActions = {},
@@ -220,6 +220,19 @@ export const LinkModal = ({
       localStorage.removeItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY);
     }
   };
+};
 
+// React component
+export const LinkModal = ({
+  jwt,
+  url = 'https://link.blockmate.io/',
+  cleanupActions = {},
+  additionalUrlParams= null,
+  merchantInfo = {
+    description: 'ExampleMerchant',
+    icon: 'https://api.blockmate.io/v1/onchain/static/bitcoin.png',
+  },
+}) => {
+  createLinkModal({jwt, url, cleanupActions, additionalUrlParams, merchantInfo});
   return null;
 };
