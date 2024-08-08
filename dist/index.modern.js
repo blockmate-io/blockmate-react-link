@@ -38,7 +38,7 @@ var handleRedirect = function handleRedirect(targetUrl) {
     targetUrl: targetUrl
   }, '*');
 };
-var LinkModal = function LinkModal(_ref) {
+var createLinkModal = function createLinkModal(_ref) {
   var jwt = _ref.jwt,
     _ref$url = _ref.url,
     url = _ref$url === void 0 ? 'https://link.blockmate.io/' : _ref$url,
@@ -201,8 +201,29 @@ var LinkModal = function LinkModal(_ref) {
       localStorage.removeItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY);
     }
   };
+};
+var LinkModal = function LinkModal(_ref6) {
+  var jwt = _ref6.jwt,
+    _ref6$url = _ref6.url,
+    url = _ref6$url === void 0 ? 'https://link.blockmate.io/' : _ref6$url,
+    _ref6$cleanupActions = _ref6.cleanupActions,
+    cleanupActions = _ref6$cleanupActions === void 0 ? {} : _ref6$cleanupActions,
+    _ref6$additionalUrlPa = _ref6.additionalUrlParams,
+    additionalUrlParams = _ref6$additionalUrlPa === void 0 ? null : _ref6$additionalUrlPa,
+    _ref6$merchantInfo = _ref6.merchantInfo,
+    merchantInfo = _ref6$merchantInfo === void 0 ? {
+      description: 'ExampleMerchant',
+      icon: 'https://api.blockmate.io/v1/onchain/static/bitcoin.png'
+    } : _ref6$merchantInfo;
+  createLinkModal({
+    jwt: jwt,
+    url: url,
+    cleanupActions: cleanupActions,
+    additionalUrlParams: additionalUrlParams,
+    merchantInfo: merchantInfo
+  });
   return null;
 };
 
-export { LinkModal, handleClose, handleOpen, handleRedirect };
+export { LinkModal, createLinkModal, handleClose, handleOpen, handleRedirect };
 //# sourceMappingURL=index.modern.js.map
