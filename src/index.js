@@ -66,7 +66,7 @@ export const createLinkModal = ({
         // This will redirect the user to the same page without the query param, but with state in localStorage
         location.replace(`${window.location.origin}${window.location.pathname}?${params.toString()}`);
       }
-    }, 500);
+    }, 1000);
   };
 
   const startDepositSuccessPolling = () => {
@@ -86,7 +86,7 @@ export const createLinkModal = ({
       params.delete(DEPOSIT_SUCCESS_PARAM);
       params.delete('detail');
       location.replace(`${window.location.origin}${window.location.pathname}?${params.toString()}`);
-    }, 500);
+    }, 1000);
   };
 
   // For oauth
@@ -122,7 +122,7 @@ export const createLinkModal = ({
         );
         localStorage.removeItem(OAUTH_LOCAL_STORAGE_KEY);
       }
-    }, 500);
+    }, 1000);
   };
 
   const body = document.querySelector('body');
@@ -242,3 +242,12 @@ export const LinkModal = ({
   createLinkModal({jwt, url, cleanupActions, additionalUrlParams, merchantInfo});
   return null;
 };
+
+if (typeof window !== 'undefined') {
+  window.BlockmateLink = {
+    handleOpen,
+    handleClose,
+    handleRedirect,
+    createLinkModal,
+  };
+}

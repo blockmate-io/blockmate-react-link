@@ -70,7 +70,7 @@ var createLinkModal = function createLinkModal(_ref) {
         localStorage.setItem(OAUTH_LOCAL_STORAGE_KEY, maybeOauthConnectedAccount);
         location.replace("" + window.location.origin + window.location.pathname + "?" + params.toString());
       }
-    }, 500);
+    }, 1000);
   };
   var startDepositSuccessPolling = function startDepositSuccessPolling() {
     var depositSuccessPollingInterval = setInterval(function () {
@@ -89,7 +89,7 @@ var createLinkModal = function createLinkModal(_ref) {
       params["delete"](DEPOSIT_SUCCESS_PARAM);
       params["delete"]('detail');
       location.replace("" + window.location.origin + window.location.pathname + "?" + params.toString());
-    }, 500);
+    }, 1000);
   };
   var startLocalStoragePolling = function startLocalStoragePolling() {
     var localStoragePollingInterval = setInterval(function () {
@@ -111,7 +111,7 @@ var createLinkModal = function createLinkModal(_ref) {
         createIframe(new URL(path, url).href, undefined, oauthConnectedAccount, step);
         localStorage.removeItem(OAUTH_LOCAL_STORAGE_KEY);
       }
-    }, 500);
+    }, 1000);
   };
   var body = document.querySelector('body');
   var iframeStyle = 'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0';
@@ -230,6 +230,14 @@ var LinkModal = function LinkModal(_ref6) {
   });
   return null;
 };
+if (typeof window !== 'undefined') {
+  window.BlockmateLink = {
+    handleOpen: handleOpen,
+    handleClose: handleClose,
+    handleRedirect: handleRedirect,
+    createLinkModal: createLinkModal
+  };
+}
 
 exports.LinkModal = LinkModal;
 exports.createLinkModal = createLinkModal;
