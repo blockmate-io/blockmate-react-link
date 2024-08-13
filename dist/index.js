@@ -12,12 +12,22 @@ var EVENT_MESSAGES = {
   directDeposit: 'deposit-wallet-connect'
 };
 var TRUSTED_ORIGINS = ['https://link.blockmate.io', 'https://link-dev-ovh.blockmate.io', 'https://link-cs.blockmate.io', 'http://localhost:3000'];
+var OAUTH_QUERY_PARAM = 'oauthConnectedAccount';
+var OAUTH_LOCAL_STORAGE_KEY = 'oauth_connected_account';
+var DEPOSIT_OAUTH_SUCCESS_STEP = 'oauth_success';
+var DEPOSIT_ID_PARAM = 'deposit_id';
+var DEPOSIT_SUCCESS_PARAM = 'success';
+var DEPOSIT_ERROR_STORAGE_KEY = 'deposit_error';
+var DEPOSIT_JWT_LOCAL_STORAGE_KEY = 'deposit_jwt';
 var handleOpen = function handleOpen(message, accountId, oauthConnectedAccount, extraUrlParams) {
   if (message === void 0) {
     message = '';
   }
   if (!Object.keys(EVENT_MESSAGES).includes(message)) {
     message = 'linkConnect';
+  }
+  if (extraUrlParams !== null && extraUrlParams !== void 0 && extraUrlParams.jwt) {
+    localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, extraUrlParams.jwt);
   }
   window.parent.postMessage({
     type: message,
@@ -51,13 +61,6 @@ var createLinkModal = function createLinkModal(_ref) {
       description: 'ExampleMerchant',
       icon: 'https://api.blockmate.io/v1/onchain/static/bitcoin.png'
     } : _ref$merchantInfo;
-  var OAUTH_QUERY_PARAM = 'oauthConnectedAccount';
-  var OAUTH_LOCAL_STORAGE_KEY = 'oauth_connected_account';
-  var DEPOSIT_OAUTH_SUCCESS_STEP = 'oauth_success';
-  var DEPOSIT_ID_PARAM = 'deposit_id';
-  var DEPOSIT_SUCCESS_PARAM = 'success';
-  var DEPOSIT_ERROR_STORAGE_KEY = 'deposit_error';
-  var DEPOSIT_JWT_LOCAL_STORAGE_KEY = 'deposit_jwt';
   var startOauthSuccessPolling = function startOauthSuccessPolling() {
     var oauthPollingInterval = setInterval(function () {
       var params = new URLSearchParams(window.location.search);
@@ -181,10 +184,14 @@ var createLinkModal = function createLinkModal(_ref) {
       }
     }
     if ((event === null || event === void 0 ? void 0 : (_event$data3 = event.data) === null || _event$data3 === void 0 ? void 0 : _event$data3.type) === 'close') {
-      localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
+      if (jwt) {
+        localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
+      }
       removeIframe(event);
     } else if ((event === null || event === void 0 ? void 0 : (_event$data4 = event.data) === null || _event$data4 === void 0 ? void 0 : _event$data4.type) === 'redirect') {
-      localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
+      if (jwt) {
+        localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
+      }
       window.location.replace(event.data.targetUrl);
     } else {
       var _event$data$extraUrlP, _event$data$extraUrlP2, _event$data5, _event$data6;
@@ -198,7 +205,6 @@ var createLinkModal = function createLinkModal(_ref) {
       }
       var includeDefaultJwt = !((_event$data$extraUrlP2 = event.data.extraUrlParams) !== null && _event$data$extraUrlP2 !== void 0 && _event$data$extraUrlP2.jwt);
       createIframe(new URL("" + EVENT_MESSAGES[event.data.type] + urlParams, url).href, (_event$data5 = event.data) === null || _event$data5 === void 0 ? void 0 : _event$data5.accountId, (_event$data6 = event.data) === null || _event$data6 === void 0 ? void 0 : _event$data6.oauthConnectedAccount, undefined, undefined, includeDefaultJwt);
-      localStorage.removeItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY);
     }
   };
 };

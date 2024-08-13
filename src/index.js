@@ -19,9 +19,20 @@ const TRUSTED_ORIGINS = [
   'http://localhost:3000'
 ];
 
+const OAUTH_QUERY_PARAM = 'oauthConnectedAccount';
+const OAUTH_LOCAL_STORAGE_KEY = 'oauth_connected_account';
+const DEPOSIT_OAUTH_SUCCESS_STEP = 'oauth_success';
+const DEPOSIT_ID_PARAM = 'deposit_id';
+const DEPOSIT_SUCCESS_PARAM = 'success';
+const DEPOSIT_ERROR_STORAGE_KEY = 'deposit_error';
+const DEPOSIT_JWT_LOCAL_STORAGE_KEY = 'deposit_jwt';
+
 export const handleOpen = (message = '', accountId, oauthConnectedAccount, extraUrlParams) => {
   if (!Object.keys(EVENT_MESSAGES).includes(message)) {
     message = 'linkConnect';
+  }
+  if (extraUrlParams?.jwt) {
+    localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, extraUrlParams.jwt);
   }
   window.parent.postMessage({ type: message, accountId, oauthConnectedAccount, extraUrlParams }, '*');
 };
@@ -44,14 +55,6 @@ export const createLinkModal = ({
     icon: 'https://api.blockmate.io/v1/onchain/static/bitcoin.png',
   },
 }) => {
-  const OAUTH_QUERY_PARAM = 'oauthConnectedAccount';
-  const OAUTH_LOCAL_STORAGE_KEY = 'oauth_connected_account';
-  const DEPOSIT_OAUTH_SUCCESS_STEP = 'oauth_success';
-  const DEPOSIT_ID_PARAM = 'deposit_id';
-  const DEPOSIT_SUCCESS_PARAM = 'success';
-  const DEPOSIT_ERROR_STORAGE_KEY = 'deposit_error';
-  const DEPOSIT_JWT_LOCAL_STORAGE_KEY = 'deposit_jwt';
-
   // For oauth
   const startOauthSuccessPolling = () => {
     const oauthPollingInterval = setInterval(() => {
@@ -198,10 +201,14 @@ export const createLinkModal = ({
     }
 
     if (event?.data?.type === 'close') {
-      localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
+      if (jwt) {
+        localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
+      }
       removeIframe(event);
     } else if (event?.data?.type === 'redirect') {
-      localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
+      if (jwt) {
+        localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
+      }
       window.location.replace(event.data.targetUrl);
     } else {
       let urlParams = Object.entries((event.data.extraUrlParams ?? {})).map(([key, value]) => `${key}=${value}`).join('&');
@@ -217,7 +224,6 @@ export const createLinkModal = ({
         undefined,
         includeDefaultJwt,
       );
-      localStorage.removeItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY);
     }
   };
 };
