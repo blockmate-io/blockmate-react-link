@@ -1,6 +1,6 @@
 {
   "name": "@blockmate.io/blockmate-react-link",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Application to link external service to Blockmate Link app",
   "author": "blockmate-io",
   "license": "MIT",
