@@ -24,6 +24,7 @@ const OAUTH_LOCAL_STORAGE_KEY = 'oauth_connected_account';
 const DEPOSIT_OAUTH_SUCCESS_STEP = 'oauth_success';
 const DEPOSIT_ID_PARAM = 'deposit_id';
 const DEPOSIT_SUCCESS_PARAM = 'success';
+const DEPOSIT_SUCCESS_PARAM_FOR_MERCHANT = 'payment_success';
 const DEPOSIT_ERROR_STORAGE_KEY = 'deposit_error';
 const DEPOSIT_JWT_LOCAL_STORAGE_KEY = 'deposit_jwt';
 
@@ -54,6 +55,7 @@ export const createLinkModal = ({
     description: 'ExampleMerchant',
     icon: 'https://api.blockmate.io/v1/onchain/static/bitcoin.png',
   },
+  pollingTimeoutMs = 1000,
 }) => {
   // For oauth
   const startOauthSuccessPolling = () => {
@@ -66,7 +68,7 @@ export const createLinkModal = ({
         // This will redirect the user to the same page without the query param, but with state in localStorage
         location.replace(`${window.location.origin}${window.location.pathname}?${params.toString()}`);
       }
-    }, 1000);
+    }, pollingTimeoutMs);
   };
 
   const startDepositSuccessPolling = () => {
@@ -85,8 +87,9 @@ export const createLinkModal = ({
       }
       params.delete(DEPOSIT_SUCCESS_PARAM);
       params.delete('detail');
+      params.set(DEPOSIT_SUCCESS_PARAM_FOR_MERCHANT, maybeSuccessParam);
       location.replace(`${window.location.origin}${window.location.pathname}?${params.toString()}`);
-    }, 1000);
+    }, pollingTimeoutMs);
   };
 
   // For oauth
@@ -122,7 +125,7 @@ export const createLinkModal = ({
         );
         localStorage.removeItem(OAUTH_LOCAL_STORAGE_KEY);
       }
-    }, 1000);
+    }, pollingTimeoutMs);
   };
 
   const body = document.querySelector('body');

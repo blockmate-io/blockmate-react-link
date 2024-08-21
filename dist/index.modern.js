@@ -17,6 +17,7 @@ var OAUTH_LOCAL_STORAGE_KEY = 'oauth_connected_account';
 var DEPOSIT_OAUTH_SUCCESS_STEP = 'oauth_success';
 var DEPOSIT_ID_PARAM = 'deposit_id';
 var DEPOSIT_SUCCESS_PARAM = 'success';
+var DEPOSIT_SUCCESS_PARAM_FOR_MERCHANT = 'payment_success';
 var DEPOSIT_ERROR_STORAGE_KEY = 'deposit_error';
 var DEPOSIT_JWT_LOCAL_STORAGE_KEY = 'deposit_jwt';
 var handleOpen = function handleOpen(message, accountId, oauthConnectedAccount, extraUrlParams) {
@@ -60,7 +61,9 @@ var createLinkModal = function createLinkModal(_ref) {
     merchantInfo = _ref$merchantInfo === void 0 ? {
       description: 'ExampleMerchant',
       icon: 'https://api.blockmate.io/v1/onchain/static/bitcoin.png'
-    } : _ref$merchantInfo;
+    } : _ref$merchantInfo,
+    _ref$pollingTimeoutMs = _ref.pollingTimeoutMs,
+    pollingTimeoutMs = _ref$pollingTimeoutMs === void 0 ? 1000 : _ref$pollingTimeoutMs;
   var startOauthSuccessPolling = function startOauthSuccessPolling() {
     var oauthPollingInterval = setInterval(function () {
       var params = new URLSearchParams(window.location.search);
@@ -70,7 +73,7 @@ var createLinkModal = function createLinkModal(_ref) {
         localStorage.setItem(OAUTH_LOCAL_STORAGE_KEY, maybeOauthConnectedAccount);
         location.replace("" + window.location.origin + window.location.pathname + "?" + params.toString());
       }
-    }, 1000);
+    }, pollingTimeoutMs);
   };
   var startDepositSuccessPolling = function startDepositSuccessPolling() {
     var depositSuccessPollingInterval = setInterval(function () {
@@ -88,8 +91,9 @@ var createLinkModal = function createLinkModal(_ref) {
       }
       params["delete"](DEPOSIT_SUCCESS_PARAM);
       params["delete"]('detail');
+      params.set(DEPOSIT_SUCCESS_PARAM_FOR_MERCHANT, maybeSuccessParam);
       location.replace("" + window.location.origin + window.location.pathname + "?" + params.toString());
-    }, 1000);
+    }, pollingTimeoutMs);
   };
   var startLocalStoragePolling = function startLocalStoragePolling() {
     var localStoragePollingInterval = setInterval(function () {
@@ -111,7 +115,7 @@ var createLinkModal = function createLinkModal(_ref) {
         createIframe(new URL(path, url).href, undefined, oauthConnectedAccount, step);
         localStorage.removeItem(OAUTH_LOCAL_STORAGE_KEY);
       }
-    }, 1000);
+    }, pollingTimeoutMs);
   };
   var body = document.querySelector('body');
   var iframeStyle = 'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0';
