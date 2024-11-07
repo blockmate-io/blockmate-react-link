@@ -57,11 +57,6 @@ var createLinkModal = function createLinkModal(_ref) {
     cleanupActions = _ref$cleanupActions === void 0 ? {} : _ref$cleanupActions,
     _ref$additionalUrlPar = _ref.additionalUrlParams,
     additionalUrlParams = _ref$additionalUrlPar === void 0 ? null : _ref$additionalUrlPar,
-    _ref$merchantInfo = _ref.merchantInfo,
-    merchantInfo = _ref$merchantInfo === void 0 ? {
-      description: 'ExampleMerchant',
-      icon: 'https://api.blockmate.io/v1/onchain/static/bitcoin.png'
-    } : _ref$merchantInfo,
     _ref$pollingTimeoutMs = _ref.pollingTimeoutMs,
     pollingTimeoutMs = _ref$pollingTimeoutMs === void 0 ? 1000 : _ref$pollingTimeoutMs;
   var startOauthSuccessPolling = function startOauthSuccessPolling() {
@@ -127,23 +122,18 @@ var createLinkModal = function createLinkModal(_ref) {
     var existingIframe = document.getElementById(iframeId);
     if (!existingIframe) {
       var parentUrlEncoded = encodeURIComponent(window.location.href);
-      var merchantUrlParams = [['merchantDescription', merchantInfo.description], ['merchantIcon', encodeURIComponent(merchantInfo.icon)]].filter(function (_ref2) {
-        var value = _ref2[1];
-        return value;
-      });
-      console.log("[REACT-LINK] merchantDescription: " + merchantInfo.description);
-      console.log("[REACT-LINK] merchantIcon: " + encodeURIComponent(merchantInfo.icon));
-      console.log("[REACT-LINK] merchantIcon unencoded: " + merchantInfo.icon);
       var token = includeDefaultJwt && (jwt || localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY));
       var params = new URLSearchParams(window.location.search);
       var providerNameParam = params.get('providerName');
-      var urlParamsArray = [['jwt', token], ['accountId', accountId], ['step', step], ['depositError', depositError], ['providerName', providerNameParam]].concat(merchantUrlParams, Object.entries(additionalUrlParams != null ? additionalUrlParams : {}), [['parentUrlEncoded', parentUrlEncoded]]).filter(function (_ref3) {
-        var value = _ref3[1];
+      var merchantDescriptionParam = params.get('merchantDescription');
+      var merchantIconParam = params.get('merchantIcon');
+      var urlParamsArray = [['jwt', token], ['accountId', accountId], ['step', step], ['depositError', depositError], ['providerName', providerNameParam], ['merchantDescription', merchantDescriptionParam], ['merchantIcon', merchantIconParam]].concat(Object.entries(additionalUrlParams != null ? additionalUrlParams : {}), [['parentUrlEncoded', parentUrlEncoded]]).filter(function (_ref2) {
+        var value = _ref2[1];
         return value;
       });
-      var urlParams = urlParamsArray.map(function (_ref4) {
-        var key = _ref4[0],
-          value = _ref4[1];
+      var urlParams = urlParamsArray.map(function (_ref3) {
+        var key = _ref3[0],
+          value = _ref3[1];
         return key + "=" + value;
       }).join('&');
       if (url.includes('?')) {
@@ -202,9 +192,9 @@ var createLinkModal = function createLinkModal(_ref) {
       window.location.replace(event.data.targetUrl);
     } else {
       var _event$data$extraUrlP, _event$data$extraUrlP2, _event$data5, _event$data6;
-      var urlParams = Object.entries((_event$data$extraUrlP = event.data.extraUrlParams) != null ? _event$data$extraUrlP : {}).map(function (_ref5) {
-        var key = _ref5[0],
-          value = _ref5[1];
+      var urlParams = Object.entries((_event$data$extraUrlP = event.data.extraUrlParams) != null ? _event$data$extraUrlP : {}).map(function (_ref4) {
+        var key = _ref4[0],
+          value = _ref4[1];
         return key + "=" + value;
       }).join('&');
       if (urlParams.length > 0) {
@@ -215,25 +205,19 @@ var createLinkModal = function createLinkModal(_ref) {
     }
   };
 };
-var LinkModal = function LinkModal(_ref6) {
-  var jwt = _ref6.jwt,
-    _ref6$url = _ref6.url,
-    url = _ref6$url === void 0 ? 'https://link.blockmate.io/' : _ref6$url,
-    _ref6$cleanupActions = _ref6.cleanupActions,
-    cleanupActions = _ref6$cleanupActions === void 0 ? {} : _ref6$cleanupActions,
-    _ref6$additionalUrlPa = _ref6.additionalUrlParams,
-    additionalUrlParams = _ref6$additionalUrlPa === void 0 ? null : _ref6$additionalUrlPa,
-    _ref6$merchantInfo = _ref6.merchantInfo,
-    merchantInfo = _ref6$merchantInfo === void 0 ? {
-      description: 'ExampleMerchant',
-      icon: 'https://api.blockmate.io/v1/onchain/static/bitcoin.png'
-    } : _ref6$merchantInfo;
+var LinkModal = function LinkModal(_ref5) {
+  var jwt = _ref5.jwt,
+    _ref5$url = _ref5.url,
+    url = _ref5$url === void 0 ? 'https://link.blockmate.io/' : _ref5$url,
+    _ref5$cleanupActions = _ref5.cleanupActions,
+    cleanupActions = _ref5$cleanupActions === void 0 ? {} : _ref5$cleanupActions,
+    _ref5$additionalUrlPa = _ref5.additionalUrlParams,
+    additionalUrlParams = _ref5$additionalUrlPa === void 0 ? null : _ref5$additionalUrlPa;
   createLinkModal({
     jwt: jwt,
     url: url,
     cleanupActions: cleanupActions,
-    additionalUrlParams: additionalUrlParams,
-    merchantInfo: merchantInfo
+    additionalUrlParams: additionalUrlParams
   });
   return null;
 };

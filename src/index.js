@@ -51,10 +51,6 @@ export const createLinkModal = ({
   url = 'https://link.blockmate.io/',
   cleanupActions = {},
   additionalUrlParams= null,
-  merchantInfo = {
-    description: 'ExampleMerchant',
-    icon: 'https://api.blockmate.io/v1/onchain/static/bitcoin.png',
-  },
   pollingTimeoutMs = 1000,
 }) => {
   // For oauth
@@ -137,24 +133,22 @@ export const createLinkModal = ({
     const existingIframe = document.getElementById(iframeId);
     if (!existingIframe) {
       const parentUrlEncoded = encodeURIComponent(window.location.href);
-      const merchantUrlParams = [['merchantDescription', merchantInfo.description], ['merchantIcon', encodeURIComponent(merchantInfo.icon)]]
-        .filter(([_, value]) => value);
-      console.log(`[REACT-LINK] merchantDescription: ${merchantInfo.description}`);
-      console.log(`[REACT-LINK] merchantIcon: ${encodeURIComponent(merchantInfo.icon)}`);
-      console.log(`[REACT-LINK] merchantIcon unencoded: ${merchantInfo.icon}`);
       const token = includeDefaultJwt && (jwt || localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY));
       const params = new URLSearchParams(window.location.search);
       const providerNameParam = params.get('providerName');
+      const merchantDescriptionParam = params.get('merchantDescription');
+      const merchantIconParam = params.get('merchantIcon');
       const urlParamsArray = [
         ['jwt', token],
         ['accountId', accountId],
         ['step', step],
         ['depositError', depositError],
         ['providerName', providerNameParam],
-        ...merchantUrlParams,
+        ['merchantDescription', merchantDescriptionParam],
+        ['merchantIcon', merchantIconParam],
         ...Object.entries(additionalUrlParams ?? {}),
         ['parentUrlEncoded', parentUrlEncoded],
-      ].filter(([key, value]) => value);
+      ].filter(([_, value]) => value);
       let urlParams = urlParamsArray.map(([key, value]) => `${key}=${value}`).join('&');
       if (url.includes('?')) {
         urlParams = `&${urlParams}`;
@@ -178,7 +172,7 @@ export const createLinkModal = ({
   const removeIframe = (event) => {
     const iframe = document.querySelector('#link-iframe');
     if (iframe) {
-      body.removeChild(iframe);
+      body.removeChild(iframe);   
     }
     if (event.data.url) {
       window.location = event.data.url;
@@ -240,12 +234,8 @@ export const LinkModal = ({
   url = 'https://link.blockmate.io/',
   cleanupActions = {},
   additionalUrlParams= null,
-  merchantInfo = {
-    description: 'ExampleMerchant',
-    icon: 'https://api.blockmate.io/v1/onchain/static/bitcoin.png',
-  },
 }) => {
-  createLinkModal({jwt, url, cleanupActions, additionalUrlParams, merchantInfo});
+  createLinkModal({jwt, url, cleanupActions, additionalUrlParams});
   return null;
 };
 
