@@ -139,18 +139,21 @@ export const createLinkModal = ({
       const parentUrlEncoded = encodeURIComponent(window.location.href);
       const merchantUrlParams = [['merchantDescription', merchantInfo.description], ['merchantIcon', encodeURIComponent(merchantInfo.icon)]]
         .filter(([_, value]) => value);
+      console.log(`[REACT-LINK] merchantDescription: ${merchantInfo.description}`);
+      console.log(`[REACT-LINK] merchantIcon: ${encodeURIComponent(merchantInfo.icon)}`);
+      console.log(`[REACT-LINK] merchantIcon unencoded: ${merchantInfo.icon}`);
       const token = includeDefaultJwt && (jwt || localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY));
       const params = new URLSearchParams(window.location.search);
       const providerNameParam = params.get('providerName');
       const urlParamsArray = [
         ['jwt', token],
         ['accountId', accountId],
-        ['parentUrlEncoded', parentUrlEncoded],
         ['step', step],
         ['depositError', depositError],
         ['providerName', providerNameParam],
         ...merchantUrlParams,
-        ...Object.entries(additionalUrlParams ?? {})
+        ...Object.entries(additionalUrlParams ?? {}),
+        ['parentUrlEncoded', parentUrlEncoded],
       ].filter(([key, value]) => value);
       let urlParams = urlParamsArray.map(([key, value]) => `${key}=${value}`).join('&');
       if (url.includes('?')) {

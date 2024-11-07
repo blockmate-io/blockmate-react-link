@@ -131,10 +131,13 @@ var createLinkModal = function createLinkModal(_ref) {
         var value = _ref2[1];
         return value;
       });
+      console.log("[REACT-LINK] merchantDescription: " + merchantInfo.description);
+      console.log("[REACT-LINK] merchantIcon: " + encodeURIComponent(merchantInfo.icon));
+      console.log("[REACT-LINK] merchantIcon unencoded: " + merchantInfo.icon);
       var token = includeDefaultJwt && (jwt || localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY));
       var params = new URLSearchParams(window.location.search);
       var providerNameParam = params.get('providerName');
-      var urlParamsArray = [['jwt', token], ['accountId', accountId], ['parentUrlEncoded', parentUrlEncoded], ['step', step], ['depositError', depositError], ['providerName', providerNameParam]].concat(merchantUrlParams, Object.entries(additionalUrlParams != null ? additionalUrlParams : {})).filter(function (_ref3) {
+      var urlParamsArray = [['jwt', token], ['accountId', accountId], ['step', step], ['depositError', depositError], ['providerName', providerNameParam]].concat(merchantUrlParams, Object.entries(additionalUrlParams != null ? additionalUrlParams : {}), [['parentUrlEncoded', parentUrlEncoded]]).filter(function (_ref3) {
         var value = _ref3[1];
         return value;
       });
