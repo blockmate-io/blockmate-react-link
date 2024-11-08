@@ -132,25 +132,23 @@ export const createLinkModal = ({
     const iframeId = 'link-iframe';
     const existingIframe = document.getElementById(iframeId);
     if (!existingIframe) {
-      const parentUrlEncoded = encodeURIComponent(window.location.href);
+      const parentUrlEncoded = Buffer.from(window.location.href).toString('base64');
+      console.log(`Parent url before encoding: ${window.location.href}`);
+      console.log(`Parent url encoded: ${parentUrlEncoded}`);
       const token = includeDefaultJwt && (jwt || localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY));
       const params = new URLSearchParams(window.location.search);
       const providerNameParam = params.get('providerName');
-      const merchantDescriptionParam = params.get('merchantDescription');
-      const merchantIconParam = params.get('merchantIcon');
       const urlParamsArray = [
         ['jwt', token],
         ['accountId', accountId],
         ['step', step],
         ['depositError', depositError],
         ['providerName', providerNameParam],
-        ['merchantDescription', merchantDescriptionParam],
-        ['merchantIcon', merchantIconParam],
-        ...Object.entries(additionalUrlParams ?? {}),
         ['parentUrlEncoded', parentUrlEncoded],
+        ...Object.entries(additionalUrlParams ?? {}),
       ].filter(([_, value]) => value);
       let urlParams = urlParamsArray.map(([key, value]) => `${key}=${value}`).join('&');
-      if (url.includes('?')) {
+      if (url.includes('?')) {  
         urlParams = `&${urlParams}`;
       } else if (urlParams.length > 0) {
         urlParams = `?${urlParams}`;
@@ -172,7 +170,7 @@ export const createLinkModal = ({
   const removeIframe = (event) => {
     const iframe = document.querySelector('#link-iframe');
     if (iframe) {
-      body.removeChild(iframe);   
+      body.removeChild(iframe);
     }
     if (event.data.url) {
       window.location = event.data.url;

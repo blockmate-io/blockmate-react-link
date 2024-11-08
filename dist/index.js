@@ -121,13 +121,13 @@ var createLinkModal = function createLinkModal(_ref) {
     var iframeId = 'link-iframe';
     var existingIframe = document.getElementById(iframeId);
     if (!existingIframe) {
-      var parentUrlEncoded = encodeURIComponent(window.location.href);
+      var parentUrlEncoded = Buffer.from(window.location.href).toString('base64');
+      console.log("Parent url before encoding: " + window.location.href);
+      console.log("Parent url encoded: " + parentUrlEncoded);
       var token = includeDefaultJwt && (jwt || localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY));
       var params = new URLSearchParams(window.location.search);
       var providerNameParam = params.get('providerName');
-      var merchantDescriptionParam = params.get('merchantDescription');
-      var merchantIconParam = params.get('merchantIcon');
-      var urlParamsArray = [['jwt', token], ['accountId', accountId], ['step', step], ['depositError', depositError], ['providerName', providerNameParam], ['merchantDescription', merchantDescriptionParam], ['merchantIcon', merchantIconParam]].concat(Object.entries(additionalUrlParams != null ? additionalUrlParams : {}), [['parentUrlEncoded', parentUrlEncoded]]).filter(function (_ref2) {
+      var urlParamsArray = [['jwt', token], ['accountId', accountId], ['step', step], ['depositError', depositError], ['providerName', providerNameParam], ['parentUrlEncoded', parentUrlEncoded]].concat(Object.entries(additionalUrlParams != null ? additionalUrlParams : {})).filter(function (_ref2) {
         var value = _ref2[1];
         return value;
       });
