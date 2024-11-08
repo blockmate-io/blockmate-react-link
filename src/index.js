@@ -1,8 +1,5 @@
 window.Buffer = window.Buffer || require("buffer").Buffer;
 
-console.log(`Buffer: ${Buffer}`);
-console.log(`window.Buffer: ${window.Buffer}`);
-
 const EVENT_MESSAGES = {
   linkConnect: ``,
   verifyPhone: `verify-phone`,
@@ -138,8 +135,6 @@ export const createLinkModal = ({
     const existingIframe = document.getElementById(iframeId);
     if (!existingIframe) {
       const parentUrlEncoded = Buffer.from(window.location.href).toString('base64');
-      console.log(`Parent url before encoding: ${window.location.href}`);
-      console.log(`Parent url encoded: ${parentUrlEncoded}`);
       const token = includeDefaultJwt && (jwt || localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY));
       const params = new URLSearchParams(window.location.search);
       const providerNameParam = params.get('providerName');
