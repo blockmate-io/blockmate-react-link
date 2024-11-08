@@ -1,3 +1,6 @@
+window.Buffer = window.Buffer || require("buffer").Buffer;
+console.log("Buffer: " + Buffer);
+console.log("window.Buffer: " + window.Buffer);
 var EVENT_MESSAGES = {
   linkConnect: "",
   verifyPhone: "verify-phone",

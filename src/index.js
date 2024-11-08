@@ -1,3 +1,8 @@
+window.Buffer = window.Buffer || require("buffer").Buffer;
+
+console.log(`Buffer: ${Buffer}`);
+console.log(`window.Buffer: ${window.Buffer}`);
+
 const EVENT_MESSAGES = {
   linkConnect: ``,
   verifyPhone: `verify-phone`,
@@ -148,7 +153,7 @@ export const createLinkModal = ({
         ...Object.entries(additionalUrlParams ?? {}),
       ].filter(([_, value]) => value);
       let urlParams = urlParamsArray.map(([key, value]) => `${key}=${value}`).join('&');
-      if (url.includes('?')) {  
+      if (url.includes('?')) {
         urlParams = `&${urlParams}`;
       } else if (urlParams.length > 0) {
         urlParams = `?${urlParams}`;
