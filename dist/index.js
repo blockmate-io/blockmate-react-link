@@ -1,6 +1,4 @@
-window.Buffer = window.Buffer || require("buffer").Buffer;
-console.log("Buffer: " + Buffer);
-console.log("window.Buffer: " + window.Buffer);
+window.Buffer = window.Buffer || require('buffer').Buffer;
 var EVENT_MESSAGES = {
   linkConnect: "",
   verifyPhone: "verify-phone",
@@ -69,7 +67,7 @@ var createLinkModal = function createLinkModal(_ref) {
       if (maybeOauthConnectedAccount) {
         params["delete"](OAUTH_QUERY_PARAM);
         localStorage.setItem(OAUTH_LOCAL_STORAGE_KEY, maybeOauthConnectedAccount);
-        location.replace("" + window.location.origin + window.location.pathname + "?" + params.toString());
+        window.close();
       }
     }, pollingTimeoutMs);
   };
@@ -106,12 +104,16 @@ var createLinkModal = function createLinkModal(_ref) {
       } else if (oauthConnectedAccount && oauthQueryParamDeletedAlready) {
         var path = EVENT_MESSAGES.linkConnect;
         var step;
-        if (currentUrl.searchParams.has(DEPOSIT_ID_PARAM)) {
+        if (localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY)) {
           path = EVENT_MESSAGES.deposit;
           step = DEPOSIT_OAUTH_SUCCESS_STEP;
         }
-        createIframe(new URL(path, url).href, undefined, oauthConnectedAccount, step);
-        localStorage.removeItem(OAUTH_LOCAL_STORAGE_KEY);
+        createIframe(new URL(path, url).href, undefined, oauthConnectedAccount, step, undefined);
+        var params = new URLSearchParams(window.location.search);
+        var maybeOauthConnectedAccount = params.get(OAUTH_QUERY_PARAM);
+        if (!maybeOauthConnectedAccount) {
+          localStorage.removeItem(OAUTH_LOCAL_STORAGE_KEY);
+        }
       }
     }, pollingTimeoutMs);
   };
@@ -125,8 +127,6 @@ var createLinkModal = function createLinkModal(_ref) {
     var existingIframe = document.getElementById(iframeId);
     if (!existingIframe) {
       var parentUrlEncoded = Buffer.from(window.location.href).toString('base64');
-      console.log("Parent url before encoding: " + window.location.href);
-      console.log("Parent url encoded: " + parentUrlEncoded);
       var token = includeDefaultJwt && (jwt || localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY));
       var params = new URLSearchParams(window.location.search);
       var providerNameParam = params.get('providerName');
@@ -180,6 +180,7 @@ var createLinkModal = function createLinkModal(_ref) {
     }
     if (['close', 'redirect'].includes(event === null || event === void 0 ? void 0 : (_event$data2 = event.data) === null || _event$data2 === void 0 ? void 0 : _event$data2.type)) {
       if (!TRUSTED_ORIGINS.includes(event.origin)) {
+        console.log('Not allowed origin');
         return null;
       }
     }
@@ -189,10 +190,16 @@ var createLinkModal = function createLinkModal(_ref) {
       }
       removeIframe(event);
     } else if ((event === null || event === void 0 ? void 0 : (_event$data4 = event.data) === null || _event$data4 === void 0 ? void 0 : _event$data4.type) === 'redirect') {
+      console.log('Redirect A');
       if (jwt) {
+        console.log('Set jwt');
         localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
       }
-      window.location.replace(event.data.targetUrl);
+      console.log("Redirect B to " + event.data.targetUrl);
+      var opened = window.open(event.data.targetUrl, '_blank');
+      if (!opened) {
+        console.log('Redirect BLOCKED');
+      }
     } else {
       var _event$data$extraUrlP, _event$data$extraUrlP2, _event$data5, _event$data6;
       var urlParams = Object.entries((_event$data$extraUrlP = event.data.extraUrlParams) != null ? _event$data$extraUrlP : {}).map(function (_ref4) {
