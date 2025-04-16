@@ -1,6 +1,4 @@
-window.Buffer = window.Buffer || require("buffer").Buffer;
-console.log("Buffer: " + Buffer);
-console.log("window.Buffer: " + window.Buffer);
+window.Buffer = window.Buffer || require('buffer').Buffer;
 var EVENT_MESSAGES = {
   linkConnect: "",
   verifyPhone: "verify-phone",
@@ -125,8 +123,6 @@ var createLinkModal = function createLinkModal(_ref) {
     var existingIframe = document.getElementById(iframeId);
     if (!existingIframe) {
       var parentUrlEncoded = Buffer.from(window.location.href).toString('base64');
-      console.log("Parent url before encoding: " + window.location.href);
-      console.log("Parent url encoded: " + parentUrlEncoded);
       var token = includeDefaultJwt && (jwt || localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY));
       var params = new URLSearchParams(window.location.search);
       var providerNameParam = params.get('providerName');
@@ -192,7 +188,7 @@ var createLinkModal = function createLinkModal(_ref) {
       if (jwt) {
         localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
       }
-      window.location.replace(event.data.targetUrl);
+      window.open(event.data.targetUrl, '_blank');
     } else {
       var _event$data$extraUrlP, _event$data$extraUrlP2, _event$data5, _event$data6;
       var urlParams = Object.entries((_event$data$extraUrlP = event.data.extraUrlParams) != null ? _event$data$extraUrlP : {}).map(function (_ref4) {
