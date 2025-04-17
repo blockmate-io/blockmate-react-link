@@ -58,6 +58,10 @@ export const handleRedirect = (targetUrl, inNewTab = false) => {
   window.parent.postMessage({ type: 'redirect', targetUrl, inNewTab }, '*')
 }
 
+export const handleInit = () => {
+  window.parent.postMessage({ type: 'init' }, '*')
+}
+
 export const createLinkModal = ({
   jwt,
   url = 'https://link.blockmate.io/',
@@ -248,7 +252,9 @@ export const createLinkModal = ({
       }
     }
 
-    if (event?.data?.type === 'close') {
+    if (event?.data?.type === 'init') {
+      localStorage.removeItem(OAUTH_LOCAL_STORAGE_KEY);
+    } else if (event?.data?.type === 'close') {
       if (jwt) {
         localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt)
       }

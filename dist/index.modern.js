@@ -54,6 +54,11 @@ var handleRedirect = function handleRedirect(targetUrl, inNewTab) {
     inNewTab: inNewTab
   }, '*');
 };
+var handleInit = function handleInit() {
+  window.parent.postMessage({
+    type: 'init'
+  }, '*');
+};
 var createLinkModal = function createLinkModal(_ref) {
   var jwt = _ref.jwt,
     _ref$url = _ref.url,
@@ -178,7 +183,7 @@ var createLinkModal = function createLinkModal(_ref) {
   startOauthSuccessPolling();
   startLocalStoragePolling();
   window.onmessage = function (event) {
-    var _event$data2, _event$data3, _event$data4;
+    var _event$data2, _event$data3, _event$data4, _event$data5;
     if (!Object.hasOwn(EVENT_MESSAGES, event.data.type)) {
       return null;
     }
@@ -187,12 +192,14 @@ var createLinkModal = function createLinkModal(_ref) {
         return null;
       }
     }
-    if ((event === null || event === void 0 ? void 0 : (_event$data3 = event.data) === null || _event$data3 === void 0 ? void 0 : _event$data3.type) === 'close') {
+    if ((event === null || event === void 0 ? void 0 : (_event$data3 = event.data) === null || _event$data3 === void 0 ? void 0 : _event$data3.type) === 'init') {
+      localStorage.removeItem(OAUTH_LOCAL_STORAGE_KEY);
+    } else if ((event === null || event === void 0 ? void 0 : (_event$data4 = event.data) === null || _event$data4 === void 0 ? void 0 : _event$data4.type) === 'close') {
       if (jwt) {
         localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
       }
       removeIframe(event);
-    } else if ((event === null || event === void 0 ? void 0 : (_event$data4 = event.data) === null || _event$data4 === void 0 ? void 0 : _event$data4.type) === 'redirect') {
+    } else if ((event === null || event === void 0 ? void 0 : (_event$data5 = event.data) === null || _event$data5 === void 0 ? void 0 : _event$data5.type) === 'redirect') {
       if (jwt) {
         localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
       }
@@ -201,7 +208,7 @@ var createLinkModal = function createLinkModal(_ref) {
         console.error('Redirect BLOCKED');
       }
     } else {
-      var _event$data$extraUrlP, _event$data$extraUrlP2, _event$data5, _event$data6;
+      var _event$data$extraUrlP, _event$data$extraUrlP2, _event$data6, _event$data7;
       var urlParams = Object.entries((_event$data$extraUrlP = event.data.extraUrlParams) != null ? _event$data$extraUrlP : {}).map(function (_ref4) {
         var key = _ref4[0],
           value = _ref4[1];
@@ -211,7 +218,7 @@ var createLinkModal = function createLinkModal(_ref) {
         urlParams = "?" + urlParams;
       }
       var includeDefaultJwt = !((_event$data$extraUrlP2 = event.data.extraUrlParams) !== null && _event$data$extraUrlP2 !== void 0 && _event$data$extraUrlP2.jwt);
-      createIframe(new URL("" + EVENT_MESSAGES[event.data.type] + urlParams, url).href, (_event$data5 = event.data) === null || _event$data5 === void 0 ? void 0 : _event$data5.accountId, (_event$data6 = event.data) === null || _event$data6 === void 0 ? void 0 : _event$data6.oauthConnectedAccount, undefined, undefined, includeDefaultJwt);
+      createIframe(new URL("" + EVENT_MESSAGES[event.data.type] + urlParams, url).href, (_event$data6 = event.data) === null || _event$data6 === void 0 ? void 0 : _event$data6.accountId, (_event$data7 = event.data) === null || _event$data7 === void 0 ? void 0 : _event$data7.oauthConnectedAccount, undefined, undefined, includeDefaultJwt);
     }
   };
 };
@@ -240,5 +247,5 @@ if (typeof window !== 'undefined') {
   };
 }
 
-export { LinkModal, createLinkModal, handleClose, handleOpen, handleRedirect };
+export { LinkModal, createLinkModal, handleClose, handleInit, handleOpen, handleRedirect };
 //# sourceMappingURL=index.modern.js.map
