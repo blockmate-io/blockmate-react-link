@@ -54,8 +54,8 @@ export const handleClose = (endResult) => {
   window.parent.postMessage({ type: 'close', endResult }, '*')
 }
 
-export const handleRedirect = (targetUrl) => {
-  window.parent.postMessage({ type: 'redirect', targetUrl }, '*')
+export const handleRedirect = (targetUrl, inNewTab = false) => {
+  window.parent.postMessage({ type: 'redirect', targetUrl, inNewTab }, '*')
 }
 
 export const createLinkModal = ({
@@ -262,7 +262,7 @@ export const createLinkModal = ({
       }
       console.log(`Redirect B to ${event.data.targetUrl}`);
       // window.location.replace(event.data.targetUrl)
-      const opened = window.open(event.data.targetUrl, '_blank');
+      const opened = window.open(event.data.targetUrl, event.data.inNewTab ? '_blank' : '_self');
       if (!opened) {
         console.log('Redirect BLOCKED');
       }

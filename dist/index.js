@@ -44,10 +44,14 @@ var handleClose = function handleClose(endResult) {
     endResult: endResult
   }, '*');
 };
-var handleRedirect = function handleRedirect(targetUrl) {
+var handleRedirect = function handleRedirect(targetUrl, inNewTab) {
+  if (inNewTab === void 0) {
+    inNewTab = false;
+  }
   window.parent.postMessage({
     type: 'redirect',
-    targetUrl: targetUrl
+    targetUrl: targetUrl,
+    inNewTab: inNewTab
   }, '*');
 };
 var createLinkModal = function createLinkModal(_ref) {
@@ -196,7 +200,7 @@ var createLinkModal = function createLinkModal(_ref) {
         localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
       }
       console.log("Redirect B to " + event.data.targetUrl);
-      var opened = window.open(event.data.targetUrl, '_blank');
+      var opened = window.open(event.data.targetUrl, event.data.inNewTab ? '_blank' : '_self');
       if (!opened) {
         console.log('Redirect BLOCKED');
       }
