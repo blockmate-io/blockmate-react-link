@@ -149,6 +149,7 @@ export const createLinkModal = ({
         if (localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY)) {
           path = EVENT_MESSAGES.deposit
           step = DEPOSIT_OAUTH_SUCCESS_STEP
+          localStorage.removeItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY);
         }
         createIframe(
           new URL(path, url).href,
