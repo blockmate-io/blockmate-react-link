@@ -244,7 +244,6 @@ export const createLinkModal = ({
     // These actions can only be called from within the iframe, check origin as they can perform redirects of the parent
     if (['close', 'redirect'].includes(event?.data?.type)) {
       if (!TRUSTED_ORIGINS.includes(event.origin)) {
-        console.log('Not allowed origin');
         return null
       }
     }
@@ -255,16 +254,12 @@ export const createLinkModal = ({
       }
       removeIframe(event)
     } else if (event?.data?.type === 'redirect') {
-      console.log('Redirect A');
       if (jwt) {
-        console.log('Set jwt');
         localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt)
       }
-      console.log(`Redirect B to ${event.data.targetUrl}`);
-      // window.location.replace(event.data.targetUrl)
       const opened = window.open(event.data.targetUrl, event.data.inNewTab ? '_blank' : '_self');
       if (!opened) {
-        console.log('Redirect BLOCKED');
+        console.error('Redirect BLOCKED');
       }
     } else {
       let urlParams = Object.entries(event.data.extraUrlParams ?? {})

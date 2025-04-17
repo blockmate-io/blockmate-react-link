@@ -184,7 +184,6 @@ var createLinkModal = function createLinkModal(_ref) {
     }
     if (['close', 'redirect'].includes(event === null || event === void 0 ? void 0 : (_event$data2 = event.data) === null || _event$data2 === void 0 ? void 0 : _event$data2.type)) {
       if (!TRUSTED_ORIGINS.includes(event.origin)) {
-        console.log('Not allowed origin');
         return null;
       }
     }
@@ -194,15 +193,12 @@ var createLinkModal = function createLinkModal(_ref) {
       }
       removeIframe(event);
     } else if ((event === null || event === void 0 ? void 0 : (_event$data4 = event.data) === null || _event$data4 === void 0 ? void 0 : _event$data4.type) === 'redirect') {
-      console.log('Redirect A');
       if (jwt) {
-        console.log('Set jwt');
         localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
       }
-      console.log("Redirect B to " + event.data.targetUrl);
       var opened = window.open(event.data.targetUrl, event.data.inNewTab ? '_blank' : '_self');
       if (!opened) {
-        console.log('Redirect BLOCKED');
+        console.error('Redirect BLOCKED');
       }
     } else {
       var _event$data$extraUrlP, _event$data$extraUrlP2, _event$data5, _event$data6;
