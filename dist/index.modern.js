@@ -113,9 +113,11 @@ var createLinkModal = function createLinkModal(_ref) {
       } else if (oauthConnectedAccount && oauthQueryParamDeletedAlready) {
         var path = EVENT_MESSAGES.linkConnect;
         var step;
+        console.log("localStorage: " + JSON.stringify(localStorage, null, 2));
         if (localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY)) {
           path = EVENT_MESSAGES.deposit;
           step = DEPOSIT_OAUTH_SUCCESS_STEP;
+          localStorage.removeItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY);
         }
         createIframe(new URL(path, url).href, undefined, oauthConnectedAccount, step, undefined);
         var params = new URLSearchParams(window.location.search);
@@ -243,7 +245,8 @@ if (typeof window !== 'undefined') {
     handleOpen: handleOpen,
     handleClose: handleClose,
     handleRedirect: handleRedirect,
-    createLinkModal: createLinkModal
+    createLinkModal: createLinkModal,
+    handleInit: handleInit
   };
 }
 

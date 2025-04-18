@@ -146,6 +146,7 @@ export const createLinkModal = ({
       } else if (oauthConnectedAccount && oauthQueryParamDeletedAlready) {
         let path = EVENT_MESSAGES.linkConnect
         let step
+        console.log(`localStorage: ${JSON.stringify(localStorage, null, 2)}`);
         if (localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY)) {
           path = EVENT_MESSAGES.deposit
           step = DEPOSIT_OAUTH_SUCCESS_STEP
@@ -304,6 +305,7 @@ if (typeof window !== 'undefined') {
     handleOpen,
     handleClose,
     handleRedirect,
-    createLinkModal
+    createLinkModal,
+    handleInit
   }
 }
