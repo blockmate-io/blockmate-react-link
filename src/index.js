@@ -31,6 +31,7 @@ const DEPOSIT_SUCCESS_PARAM = 'success'
 const DEPOSIT_SUCCESS_PARAM_FOR_MERCHANT = 'payment_success'
 const DEPOSIT_ERROR_STORAGE_KEY = 'deposit_error'
 const DEPOSIT_JWT_LOCAL_STORAGE_KEY = 'deposit_jwt'
+const MODAL_TYPE_LOCAL_STORAGE_KEY = 'modal_type'
 
 export const handleOpen = (
   message = '',
@@ -44,6 +45,7 @@ export const handleOpen = (
   if (extraUrlParams?.jwt) {
     localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, extraUrlParams.jwt)
   }
+  localStorage.setItem(MODAL_TYPE_LOCAL_STORAGE_KEY, message)
   window.parent.postMessage(
     { type: message, accountId, oauthConnectedAccount, extraUrlParams },
     '*'
@@ -146,11 +148,12 @@ export const createLinkModal = ({
       } else if (oauthConnectedAccount && oauthQueryParamDeletedAlready) {
         let path = EVENT_MESSAGES.linkConnect
         let step
-        console.log(`localStorage: ${JSON.stringify(localStorage, null, 2)}`);
-        if (localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY)) {
-          path = EVENT_MESSAGES.deposit
-          step = DEPOSIT_OAUTH_SUCCESS_STEP
-          localStorage.removeItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY);
+        const modalType = localStorage.getItem(MODAL_TYPE_LOCAL_STORAGE_KEY);
+        if (localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY) && modalType === 'deposit') {
+          if (modalType === 'deposit') {
+            path = EVENT_MESSAGES.deposit
+            step = DEPOSIT_OAUTH_SUCCESS_STEP
+          }
         }
         createIframe(
           new URL(path, url).href,

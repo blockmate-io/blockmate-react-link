@@ -21,6 +21,7 @@ var DEPOSIT_SUCCESS_PARAM = 'success';
 var DEPOSIT_SUCCESS_PARAM_FOR_MERCHANT = 'payment_success';
 var DEPOSIT_ERROR_STORAGE_KEY = 'deposit_error';
 var DEPOSIT_JWT_LOCAL_STORAGE_KEY = 'deposit_jwt';
+var MODAL_TYPE_LOCAL_STORAGE_KEY = 'modal_type';
 var handleOpen = function handleOpen(message, accountId, oauthConnectedAccount, extraUrlParams) {
   if (message === void 0) {
     message = '';
@@ -31,6 +32,7 @@ var handleOpen = function handleOpen(message, accountId, oauthConnectedAccount, 
   if (extraUrlParams !== null && extraUrlParams !== void 0 && extraUrlParams.jwt) {
     localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, extraUrlParams.jwt);
   }
+  localStorage.setItem(MODAL_TYPE_LOCAL_STORAGE_KEY, message);
   window.parent.postMessage({
     type: message,
     accountId: accountId,
@@ -113,11 +115,12 @@ var createLinkModal = function createLinkModal(_ref) {
       } else if (oauthConnectedAccount && oauthQueryParamDeletedAlready) {
         var path = EVENT_MESSAGES.linkConnect;
         var step;
-        console.log("localStorage: " + JSON.stringify(localStorage, null, 2));
-        if (localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY)) {
-          path = EVENT_MESSAGES.deposit;
-          step = DEPOSIT_OAUTH_SUCCESS_STEP;
-          localStorage.removeItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY);
+        var modalType = localStorage.getItem(MODAL_TYPE_LOCAL_STORAGE_KEY);
+        if (localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY) && modalType === 'deposit') {
+          if (modalType === 'deposit') {
+            path = EVENT_MESSAGES.deposit;
+            step = DEPOSIT_OAUTH_SUCCESS_STEP;
+          }
         }
         createIframe(new URL(path, url).href, undefined, oauthConnectedAccount, step, undefined);
         var params = new URLSearchParams(window.location.search);
