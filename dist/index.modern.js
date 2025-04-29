@@ -132,6 +132,19 @@ var createLinkModal = function createLinkModal(_ref) {
     }, pollingTimeoutMs);
   };
   var body = document.querySelector('body');
+  var spinnerId = 'iframe-loading-spinner';
+  var createSpinner = function createSpinner() {
+    var spinnerWrapper = document.createElement('div');
+    spinnerWrapper.setAttribute('id', spinnerId);
+    spinnerWrapper.setAttribute('style', "\n        position: fixed;\n        top: 50%;\n        left: 50%;\n        transform: translate(-50%, -50%);\n        z-index: 101;\n      ");
+    var spinner = document.createElement('div');
+    spinner.setAttribute('style', "\n        width: 48px;\n        height: 48px;\n        border: 6px solid rgba(255, 255, 255, 0.3);\n        border-top-color: white;\n        border-radius: 50%;\n        animation: spin 1s linear infinite;\n      ");
+    spinnerWrapper.appendChild(spinner);
+    body.appendChild(spinnerWrapper);
+    var style = document.createElement('style');
+    style.innerHTML = "\n      @keyframes spin {\n        0% { transform: rotate(0deg); }\n        100% { transform: rotate(360deg); }\n      }\n    ";
+    document.head.appendChild(style);
+  };
   var iframeStyle = 'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0; background-color: rgba(0, 0, 0, 0.55);';
   var createIframe = function createIframe(url, accountId, oauthConnectedAccount, step, depositError, includeDefaultJwt) {
     if (includeDefaultJwt === void 0) {
@@ -140,6 +153,7 @@ var createLinkModal = function createLinkModal(_ref) {
     var iframeId = 'link-iframe';
     var existingIframe = document.getElementById(iframeId);
     if (!existingIframe) {
+      createSpinner();
       var parentUrlEncoded = Buffer.from(window.location.href).toString('base64');
       var token = includeDefaultJwt && (jwt || localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY));
       var params = new URLSearchParams(window.location.search);
@@ -167,6 +181,10 @@ var createLinkModal = function createLinkModal(_ref) {
       iframe.setAttribute('style', iframeStyle);
       iframe.setAttribute('id', iframeId);
       iframe.setAttribute('allow', 'camera');
+      iframe.addEventListener('load', function () {
+        var spinner = document.getElementById(spinnerId);
+        if (spinner) spinner.remove();
+      });
       body.appendChild(iframe);
     }
   };

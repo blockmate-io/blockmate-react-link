@@ -173,6 +173,49 @@ export const createLinkModal = ({
   }
 
   const body = document.querySelector('body')
+
+  const spinnerId = 'iframe-loading-spinner'
+
+  const createSpinner = () => {
+    const spinnerWrapper = document.createElement('div')
+    spinnerWrapper.setAttribute('id', spinnerId)
+    spinnerWrapper.setAttribute(
+      'style',
+      `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 101;
+      `
+    )
+
+    const spinner = document.createElement('div')
+    spinner.setAttribute(
+      'style',
+      `
+        width: 48px;
+        height: 48px;
+        border: 6px solid rgba(255, 255, 255, 0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      `
+    )
+
+    spinnerWrapper.appendChild(spinner)
+    body.appendChild(spinnerWrapper)
+
+    const style = document.createElement('style')
+    style.innerHTML = `
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    `
+    document.head.appendChild(style)
+  }
+
   const iframeStyle =
     'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0; background-color: rgba(0, 0, 0, 0.55);'
 
@@ -187,6 +230,7 @@ export const createLinkModal = ({
     const iframeId = 'link-iframe'
     const existingIframe = document.getElementById(iframeId)
     if (!existingIframe) {
+      createSpinner();
       const parentUrlEncoded = Buffer.from(window.location.href).toString(
         'base64'
       )
@@ -222,6 +266,12 @@ export const createLinkModal = ({
       iframe.setAttribute('style', iframeStyle)
       iframe.setAttribute('id', iframeId)
       iframe.setAttribute('allow', 'camera') // For QR-code scanning
+
+      iframe.addEventListener('load', () => {
+        const spinner = document.getElementById(spinnerId)
+        if (spinner) spinner.remove()
+      })
+
       body.appendChild(iframe)
     }
   }
