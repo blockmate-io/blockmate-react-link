@@ -132,7 +132,7 @@ var createLinkModal = function createLinkModal(_ref) {
     }, pollingTimeoutMs);
   };
   var body = document.querySelector('body');
-  var iframeStyle = 'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0';
+  var iframeStyle = 'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0; background-color: rgba(0, 0, 0, 0.55);';
   var createIframe = function createIframe(url, accountId, oauthConnectedAccount, step, depositError, includeDefaultJwt) {
     if (includeDefaultJwt === void 0) {
       includeDefaultJwt = true;

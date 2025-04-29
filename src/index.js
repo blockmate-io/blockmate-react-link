@@ -174,7 +174,7 @@ export const createLinkModal = ({
 
   const body = document.querySelector('body')
   const iframeStyle =
-    'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0'
+    'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0; background-color: rgba(0, 0, 0, 0.55);'
 
   const createIframe = (
     url,
