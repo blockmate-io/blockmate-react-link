@@ -13,7 +13,8 @@ const EVENT_MESSAGES = {
   close: 'blockmate-iframe-close',
   redirect: 'redirect',
   deposit: 'deposit-exchange',
-  directDeposit: 'deposit-wallet-connect'
+  directDeposit: 'deposit-wallet-connect',
+  withdrawal: 'withdrawal-exchange',
 }
 
 const TRUSTED_ORIGINS = [
@@ -136,9 +137,10 @@ export const createLinkModal = ({
       const depositErrorParamDeletedAlready = !currentUrl.searchParams.has(
         DEPOSIT_SUCCESS_PARAM
       )
+      const modalType = localStorage.getItem(MODAL_TYPE_LOCAL_STORAGE_KEY);
       if (depositErrorParamDeletedAlready && typeof depositError === 'string') {
         createIframe(
-          new URL(EVENT_MESSAGES.deposit, url).href,
+          new URL(EVENT_MESSAGES?.[modalType] ?? '', url).href,
           undefined,
           undefined,
           undefined,
@@ -148,10 +150,12 @@ export const createLinkModal = ({
       } else if (oauthConnectedAccount && oauthQueryParamDeletedAlready) {
         let path = EVENT_MESSAGES.linkConnect
         let step
-        const modalType = localStorage.getItem(MODAL_TYPE_LOCAL_STORAGE_KEY);
-        if (localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY) && modalType === 'deposit') {
+        if (localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY)) {
           if (modalType === 'deposit') {
             path = EVENT_MESSAGES.deposit
+            step = DEPOSIT_OAUTH_SUCCESS_STEP
+          } else if (modalType === 'withdrawal') {
+            path = EVENT_MESSAGES.withdrawal
             step = DEPOSIT_OAUTH_SUCCESS_STEP
           }
         }

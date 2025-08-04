@@ -10,7 +10,8 @@ var EVENT_MESSAGES = {
   close: 'blockmate-iframe-close',
   redirect: 'redirect',
   deposit: 'deposit-exchange',
-  directDeposit: 'deposit-wallet-connect'
+  directDeposit: 'deposit-wallet-connect',
+  withdrawal: 'withdrawal-exchange'
 };
 var TRUSTED_ORIGINS = ['https://link.blockmate.io', 'https://link-dev-ovh.blockmate.io', 'https://link-cs.blockmate.io', 'http://localhost:3000'];
 var OAUTH_QUERY_PARAM = 'oauthConnectedAccount';
@@ -109,16 +110,20 @@ var createLinkModal = function createLinkModal(_ref) {
       var oauthQueryParamDeletedAlready = !currentUrl.searchParams.has(OAUTH_QUERY_PARAM);
       var depositError = localStorage.getItem(DEPOSIT_ERROR_STORAGE_KEY);
       var depositErrorParamDeletedAlready = !currentUrl.searchParams.has(DEPOSIT_SUCCESS_PARAM);
+      var modalType = localStorage.getItem(MODAL_TYPE_LOCAL_STORAGE_KEY);
       if (depositErrorParamDeletedAlready && typeof depositError === 'string') {
-        createIframe(new URL(EVENT_MESSAGES.deposit, url).href, undefined, undefined, undefined, depositError);
+        var _EVENT_MESSAGES$modal;
+        createIframe(new URL((_EVENT_MESSAGES$modal = EVENT_MESSAGES === null || EVENT_MESSAGES === void 0 ? void 0 : EVENT_MESSAGES[modalType]) != null ? _EVENT_MESSAGES$modal : '', url).href, undefined, undefined, undefined, depositError);
         localStorage.removeItem(DEPOSIT_ERROR_STORAGE_KEY);
       } else if (oauthConnectedAccount && oauthQueryParamDeletedAlready) {
         var path = EVENT_MESSAGES.linkConnect;
         var step;
-        var modalType = localStorage.getItem(MODAL_TYPE_LOCAL_STORAGE_KEY);
-        if (localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY) && modalType === 'deposit') {
+        if (localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY)) {
           if (modalType === 'deposit') {
             path = EVENT_MESSAGES.deposit;
+            step = DEPOSIT_OAUTH_SUCCESS_STEP;
+          } else if (modalType === 'withdrawal') {
+            path = EVENT_MESSAGES.withdrawal;
             step = DEPOSIT_OAUTH_SUCCESS_STEP;
           }
         }
