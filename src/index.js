@@ -301,6 +301,7 @@ export const createLinkModal = ({
 
   window.onmessage = function (event) {
     if (!Object.hasOwn(EVENT_MESSAGES, event.data.type)) {
+      console.log('Unknown type');
       return null
     }
 
@@ -327,7 +328,8 @@ export const createLinkModal = ({
         console.error('Redirect BLOCKED');
       }
     } else {
-      let urlParams = Object.entries(event.data.extraUrlParams ?? {})
+      console.log(`open with extra url params: ${JSON.stringify(event?.data?.extraUrlParams, null, 2)}`);
+      let urlParams = Object.entries(event?.data?.extraUrlParams ?? {})
         .map(([key, value]) => `${key}=${value}`)
         .join('&')
       if (urlParams.length > 0) {
