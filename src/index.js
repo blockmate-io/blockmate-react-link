@@ -137,8 +137,10 @@ export const createLinkModal = ({
       const depositErrorParamDeletedAlready = !currentUrl.searchParams.has(
         DEPOSIT_SUCCESS_PARAM
       )
-      const modalType = localStorage.getItem(MODAL_TYPE_LOCAL_STORAGE_KEY);
+      const modalType = localStorage.getItem(MODAL_TYPE_LOCAL_STORAGE_KEY)
+      console.log(`modalType: ${modalType}`)
       if (depositErrorParamDeletedAlready && typeof depositError === 'string') {
+        console.log('Going to create iframe with error')
         createIframe(
           new URL(EVENT_MESSAGES?.[modalType] ?? '', url).href,
           undefined,
@@ -148,9 +150,11 @@ export const createLinkModal = ({
         )
         localStorage.removeItem(DEPOSIT_ERROR_STORAGE_KEY)
       } else if (oauthConnectedAccount && oauthQueryParamDeletedAlready) {
+        console.log('oauthQueryParam deleted already')
         let path = EVENT_MESSAGES.linkConnect
         let step
         if (localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY)) {
+          console.log('found deposit jwt in local storage')
           if (modalType === 'deposit') {
             path = EVENT_MESSAGES.deposit
             step = DEPOSIT_OAUTH_SUCCESS_STEP
@@ -301,7 +305,6 @@ export const createLinkModal = ({
 
   window.onmessage = function (event) {
     if (!Object.hasOwn(EVENT_MESSAGES, event.data.type)) {
-      console.log('Unknown type');
       return null
     }
 
@@ -328,7 +331,6 @@ export const createLinkModal = ({
         console.error('Redirect BLOCKED');
       }
     } else {
-      console.log(`open with extra url params: ${JSON.stringify(event?.data?.extraUrlParams, null, 2)}`);
       let urlParams = Object.entries(event?.data?.extraUrlParams ?? {})
         .map(([key, value]) => `${key}=${value}`)
         .join('&')

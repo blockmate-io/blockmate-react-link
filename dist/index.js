@@ -111,14 +111,18 @@ var createLinkModal = function createLinkModal(_ref) {
       var depositError = localStorage.getItem(DEPOSIT_ERROR_STORAGE_KEY);
       var depositErrorParamDeletedAlready = !currentUrl.searchParams.has(DEPOSIT_SUCCESS_PARAM);
       var modalType = localStorage.getItem(MODAL_TYPE_LOCAL_STORAGE_KEY);
+      console.log("modalType: " + modalType);
       if (depositErrorParamDeletedAlready && typeof depositError === 'string') {
         var _EVENT_MESSAGES$modal;
+        console.log('Going to create iframe with error');
         createIframe(new URL((_EVENT_MESSAGES$modal = EVENT_MESSAGES === null || EVENT_MESSAGES === void 0 ? void 0 : EVENT_MESSAGES[modalType]) != null ? _EVENT_MESSAGES$modal : '', url).href, undefined, undefined, undefined, depositError);
         localStorage.removeItem(DEPOSIT_ERROR_STORAGE_KEY);
       } else if (oauthConnectedAccount && oauthQueryParamDeletedAlready) {
+        console.log('oauthQueryParam deleted already');
         var path = EVENT_MESSAGES.linkConnect;
         var step;
         if (localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY)) {
+          console.log('found deposit jwt in local storage');
           if (modalType === 'deposit') {
             path = EVENT_MESSAGES.deposit;
             step = DEPOSIT_OAUTH_SUCCESS_STEP;
@@ -213,7 +217,6 @@ var createLinkModal = function createLinkModal(_ref) {
   window.onmessage = function (event) {
     var _event$data2, _event$data3, _event$data4, _event$data5;
     if (!Object.hasOwn(EVENT_MESSAGES, event.data.type)) {
-      console.log('Unknown type');
       return null;
     }
     if (['close', 'redirect'].includes(event === null || event === void 0 ? void 0 : (_event$data2 = event.data) === null || _event$data2 === void 0 ? void 0 : _event$data2.type)) {
@@ -237,9 +240,8 @@ var createLinkModal = function createLinkModal(_ref) {
         console.error('Redirect BLOCKED');
       }
     } else {
-      var _event$data6, _event$data$extraUrlP, _event$data7, _event$data$extraUrlP2, _event$data8, _event$data9;
-      console.log("open with extra url params: " + JSON.stringify(event === null || event === void 0 ? void 0 : (_event$data6 = event.data) === null || _event$data6 === void 0 ? void 0 : _event$data6.extraUrlParams, null, 2));
-      var urlParams = Object.entries((_event$data$extraUrlP = event === null || event === void 0 ? void 0 : (_event$data7 = event.data) === null || _event$data7 === void 0 ? void 0 : _event$data7.extraUrlParams) != null ? _event$data$extraUrlP : {}).map(function (_ref4) {
+      var _event$data$extraUrlP, _event$data6, _event$data$extraUrlP2, _event$data7, _event$data8;
+      var urlParams = Object.entries((_event$data$extraUrlP = event === null || event === void 0 ? void 0 : (_event$data6 = event.data) === null || _event$data6 === void 0 ? void 0 : _event$data6.extraUrlParams) != null ? _event$data$extraUrlP : {}).map(function (_ref4) {
         var key = _ref4[0],
           value = _ref4[1];
         return key + "=" + value;
@@ -248,7 +250,7 @@ var createLinkModal = function createLinkModal(_ref) {
         urlParams = "?" + urlParams;
       }
       var includeDefaultJwt = !((_event$data$extraUrlP2 = event.data.extraUrlParams) !== null && _event$data$extraUrlP2 !== void 0 && _event$data$extraUrlP2.jwt);
-      createIframe(new URL("" + EVENT_MESSAGES[event.data.type] + urlParams, url).href, (_event$data8 = event.data) === null || _event$data8 === void 0 ? void 0 : _event$data8.accountId, (_event$data9 = event.data) === null || _event$data9 === void 0 ? void 0 : _event$data9.oauthConnectedAccount, undefined, undefined, includeDefaultJwt);
+      createIframe(new URL("" + EVENT_MESSAGES[event.data.type] + urlParams, url).href, (_event$data7 = event.data) === null || _event$data7 === void 0 ? void 0 : _event$data7.accountId, (_event$data8 = event.data) === null || _event$data8 === void 0 ? void 0 : _event$data8.oauthConnectedAccount, undefined, undefined, includeDefaultJwt);
     }
   };
 };
