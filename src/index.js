@@ -235,6 +235,7 @@ export const createLinkModal = ({
     depositError,
     includeDefaultJwt = true
   ) => {
+    console.log(`createIframe(url=${url}, accountId=${accountId}, oauthConnectedAccount=${oauthConnectedAccount}, step=${step}, depositError=${depositError}, includeDefaultJwt=${includeDefaultJwt})`);
     const iframeId = 'link-iframe'
     const existingIframe = document.getElementById(iframeId)
     if (!existingIframe) {

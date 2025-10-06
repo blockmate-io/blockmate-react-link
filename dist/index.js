@@ -159,6 +159,7 @@ var createLinkModal = function createLinkModal(_ref) {
     if (includeDefaultJwt === void 0) {
       includeDefaultJwt = true;
     }
+    console.log("createIframe(url=" + url + ", accountId=" + accountId + ", oauthConnectedAccount=" + oauthConnectedAccount + ", step=" + step + ", depositError=" + depositError + ", includeDefaultJwt=" + includeDefaultJwt + ")");
     var iframeId = 'link-iframe';
     var existingIframe = document.getElementById(iframeId);
     if (!existingIframe) {
