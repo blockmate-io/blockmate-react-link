@@ -111,18 +111,14 @@ var createLinkModal = function createLinkModal(_ref) {
       var depositError = localStorage.getItem(DEPOSIT_ERROR_STORAGE_KEY);
       var depositErrorParamDeletedAlready = !currentUrl.searchParams.has(DEPOSIT_SUCCESS_PARAM);
       var modalType = localStorage.getItem(MODAL_TYPE_LOCAL_STORAGE_KEY);
-      console.log("modalType: " + modalType);
       if (depositErrorParamDeletedAlready && typeof depositError === 'string') {
         var _EVENT_MESSAGES$modal;
-        console.log('Going to create iframe with error');
         createIframe(new URL((_EVENT_MESSAGES$modal = EVENT_MESSAGES === null || EVENT_MESSAGES === void 0 ? void 0 : EVENT_MESSAGES[modalType]) != null ? _EVENT_MESSAGES$modal : '', url).href, undefined, undefined, undefined, depositError);
         localStorage.removeItem(DEPOSIT_ERROR_STORAGE_KEY);
       } else if (oauthConnectedAccount && oauthQueryParamDeletedAlready) {
-        console.log('oauthQueryParam deleted already');
         var path = EVENT_MESSAGES.linkConnect;
         var step;
         if (localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY)) {
-          console.log('found deposit jwt in local storage');
           if (modalType === 'deposit') {
             path = EVENT_MESSAGES.deposit;
             step = DEPOSIT_OAUTH_SUCCESS_STEP;
@@ -159,7 +155,6 @@ var createLinkModal = function createLinkModal(_ref) {
     if (includeDefaultJwt === void 0) {
       includeDefaultJwt = true;
     }
-    console.log("createIframe(url=" + url + ", accountId=" + accountId + ", oauthConnectedAccount=" + oauthConnectedAccount + ", step=" + step + ", depositError=" + depositError + ", includeDefaultJwt=" + includeDefaultJwt + ")");
     var iframeId = 'link-iframe';
     var existingIframe = document.getElementById(iframeId);
     if (!existingIframe) {
