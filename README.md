@@ -11,8 +11,8 @@ Run ```npm i blockmate-react-link```
 
 ## Usage
 
-### Deposits
-If you want to use this library for Blockmate deposit capabilities, follow this guide. For
+### Deposits and withdrawals
+If you want to use this library for Blockmate deposit / withdrawal capabilities, follow this guide. For
 instructions on non-deposit capabilities, please jump to the next section.
 
 #### Obtaining JWT
@@ -39,6 +39,10 @@ A deposit process has to be initialized on your backend first. You provide depos
 to `https://api.blockmate.io/v1/exchange/deposit/initialize` and receive a `depositId` in return.
 You will need this `depositId` in the next steps.
 
+#### Initializing a withdrawal
+A withdrawal process has to be initialized on your backend first. You provide withdrawal parameters
+to `https://api.blockmate.io/v1/exchange/withdrawal/initialize` and receive a `withdrawalId` in return.
+You will need this `withdrawalId` in the next steps.
 
 #### React
 For usage in React, you will only need to include  the `LinkModal` component in
@@ -63,7 +67,7 @@ const YourConnectComponent = () => {
         />
         <div>Test APP</div>
         <button onClick={() => handleOpen(
-          "deposit", // Use "deposit" for deposits from exchange, or "directDeposit" for deposits using WalletConnect
+          "deposit", // Use "deposit" for deposits or "withdrawal" for withdrawals
           undefined,
           undefined,
           {
@@ -94,7 +98,7 @@ createLinkModal({
 
 document.getElementById("open-button").addEventListener("click", () => {
   handleOpen(
-    "deposit", // Use "deposit" for deposits from exchange, or "directDeposit" for deposits using WalletConnect
+    "deposit", // Use "deposit" for deposits or "withdrawal" for withdrawals
     undefined,
     undefined,
     {
