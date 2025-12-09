@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 window.Buffer = window.Buffer || require('buffer').Buffer;
 var EVENT_MESSAGES = {
   linkConnect: "",
@@ -30,7 +32,7 @@ var handleOpen = function handleOpen(message, accountId, oauthConnectedAccount, 
   if (!Object.keys(EVENT_MESSAGES).includes(message)) {
     message = 'linkConnect';
   }
-  if (extraUrlParams !== null && extraUrlParams !== void 0 && extraUrlParams.jwt) {
+  if (extraUrlParams != null && extraUrlParams.jwt) {
     localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, extraUrlParams.jwt);
   }
   localStorage.setItem(MODAL_TYPE_LOCAL_STORAGE_KEY, message);
@@ -72,19 +74,26 @@ var createLinkModal = function createLinkModal(_ref) {
     additionalUrlParams = _ref$additionalUrlPar === void 0 ? null : _ref$additionalUrlPar,
     _ref$pollingTimeoutMs = _ref.pollingTimeoutMs,
     pollingTimeoutMs = _ref$pollingTimeoutMs === void 0 ? 1000 : _ref$pollingTimeoutMs;
+  // For oauth
   var startOauthSuccessPolling = function startOauthSuccessPolling() {
-    var oauthPollingInterval = setInterval(function () {
+    setInterval(function () {
       var params = new URLSearchParams(window.location.search);
       var maybeOauthConnectedAccount = params.get(OAUTH_QUERY_PARAM);
       if (maybeOauthConnectedAccount) {
         params["delete"](OAUTH_QUERY_PARAM);
         localStorage.setItem(OAUTH_LOCAL_STORAGE_KEY, maybeOauthConnectedAccount);
+        // // This will redirect the user to the same page without the query param, but with state in localStorage
+        // location.replace(
+        //   `${window.location.origin}${
+        //     window.location.pathname
+        //   }?${params.toString()}`
+        // )
         window.close();
       }
     }, pollingTimeoutMs);
   };
   var startDepositSuccessPolling = function startDepositSuccessPolling() {
-    var depositSuccessPollingInterval = setInterval(function () {
+    setInterval(function () {
       var params = new URLSearchParams(window.location.search);
       var maybeDepositIdParam = params.get(DEPOSIT_ID_PARAM);
       var maybeSuccessParam = String(params.get(DEPOSIT_SUCCESS_PARAM)).toLowerCase();
@@ -103,8 +112,10 @@ var createLinkModal = function createLinkModal(_ref) {
       location.replace("" + window.location.origin + window.location.pathname + "?" + params.toString());
     }, pollingTimeoutMs);
   };
+
+  // For oauth
   var startLocalStoragePolling = function startLocalStoragePolling() {
-    var localStoragePollingInterval = setInterval(function () {
+    setInterval(function () {
       var oauthConnectedAccount = localStorage.getItem(OAUTH_LOCAL_STORAGE_KEY);
       var currentUrl = new URL(window.location.href);
       var oauthQueryParamDeletedAlready = !currentUrl.searchParams.has(OAUTH_QUERY_PARAM);
@@ -113,7 +124,7 @@ var createLinkModal = function createLinkModal(_ref) {
       var modalType = localStorage.getItem(MODAL_TYPE_LOCAL_STORAGE_KEY);
       if (depositErrorParamDeletedAlready && typeof depositError === 'string') {
         var _EVENT_MESSAGES$modal;
-        createIframe(new URL((_EVENT_MESSAGES$modal = EVENT_MESSAGES === null || EVENT_MESSAGES === void 0 ? void 0 : EVENT_MESSAGES[modalType]) != null ? _EVENT_MESSAGES$modal : '', url).href, undefined, undefined, undefined, depositError);
+        createIframe(new URL((_EVENT_MESSAGES$modal = EVENT_MESSAGES == null ? void 0 : EVENT_MESSAGES[modalType]) != null ? _EVENT_MESSAGES$modal : '', url).href, undefined, undefined, undefined, depositError);
         localStorage.removeItem(DEPOSIT_ERROR_STORAGE_KEY);
       } else if (oauthConnectedAccount && oauthQueryParamDeletedAlready) {
         var path = EVENT_MESSAGES.linkConnect;
@@ -128,6 +139,7 @@ var createLinkModal = function createLinkModal(_ref) {
           }
         }
         createIframe(new URL(path, url).href, undefined, oauthConnectedAccount, step, undefined);
+        // Delete from localStorage, but from the original tab, not the new tab used from oauth
         var params = new URLSearchParams(window.location.search);
         var maybeOauthConnectedAccount = params.get(OAUTH_QUERY_PARAM);
         if (!maybeOauthConnectedAccount) {
@@ -185,7 +197,8 @@ var createLinkModal = function createLinkModal(_ref) {
       iframe.setAttribute('src', urlWithParams);
       iframe.setAttribute('style', iframeStyle);
       iframe.setAttribute('id', iframeId);
-      iframe.setAttribute('allow', 'camera');
+      iframe.setAttribute('allow', 'camera'); // For QR-code scanning
+
       iframe.addEventListener('load', function () {
         var spinner = document.getElementById(spinnerId);
         if (spinner) spinner.remove();
@@ -202,7 +215,7 @@ var createLinkModal = function createLinkModal(_ref) {
     if (event.data.url) {
       window.location = event.data.url;
     }
-    var endResult = event === null || event === void 0 ? void 0 : (_event$data = event.data) === null || _event$data === void 0 ? void 0 : _event$data.endResult;
+    var endResult = event == null || (_event$data = event.data) == null ? void 0 : _event$data.endResult;
     if (endResult && cleanupActions[endResult]) {
       cleanupActions[endResult]();
     }
@@ -215,19 +228,21 @@ var createLinkModal = function createLinkModal(_ref) {
     if (!Object.hasOwn(EVENT_MESSAGES, event.data.type)) {
       return null;
     }
-    if (['close', 'redirect'].includes(event === null || event === void 0 ? void 0 : (_event$data2 = event.data) === null || _event$data2 === void 0 ? void 0 : _event$data2.type)) {
+
+    // These actions can only be called from within the iframe, check origin as they can perform redirects of the parent
+    if (['close', 'redirect'].includes(event == null || (_event$data2 = event.data) == null ? void 0 : _event$data2.type)) {
       if (!TRUSTED_ORIGINS.includes(event.origin)) {
         return null;
       }
     }
-    if ((event === null || event === void 0 ? void 0 : (_event$data3 = event.data) === null || _event$data3 === void 0 ? void 0 : _event$data3.type) === 'init') {
+    if ((event == null || (_event$data3 = event.data) == null ? void 0 : _event$data3.type) === 'init') {
       localStorage.removeItem(OAUTH_LOCAL_STORAGE_KEY);
-    } else if ((event === null || event === void 0 ? void 0 : (_event$data4 = event.data) === null || _event$data4 === void 0 ? void 0 : _event$data4.type) === 'close') {
+    } else if ((event == null || (_event$data4 = event.data) == null ? void 0 : _event$data4.type) === 'close') {
       if (jwt) {
         localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
       }
       removeIframe(event);
-    } else if ((event === null || event === void 0 ? void 0 : (_event$data5 = event.data) === null || _event$data5 === void 0 ? void 0 : _event$data5.type) === 'redirect') {
+    } else if ((event == null || (_event$data5 = event.data) == null ? void 0 : _event$data5.type) === 'redirect') {
       if (jwt) {
         localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
       }
@@ -237,7 +252,7 @@ var createLinkModal = function createLinkModal(_ref) {
       }
     } else {
       var _event$data$extraUrlP, _event$data6, _event$data$extraUrlP2, _event$data7, _event$data8;
-      var urlParams = Object.entries((_event$data$extraUrlP = event === null || event === void 0 ? void 0 : (_event$data6 = event.data) === null || _event$data6 === void 0 ? void 0 : _event$data6.extraUrlParams) != null ? _event$data$extraUrlP : {}).map(function (_ref4) {
+      var urlParams = Object.entries((_event$data$extraUrlP = event == null || (_event$data6 = event.data) == null ? void 0 : _event$data6.extraUrlParams) != null ? _event$data$extraUrlP : {}).map(function (_ref4) {
         var key = _ref4[0],
           value = _ref4[1];
         return key + "=" + value;
@@ -245,11 +260,13 @@ var createLinkModal = function createLinkModal(_ref) {
       if (urlParams.length > 0) {
         urlParams = "?" + urlParams;
       }
-      var includeDefaultJwt = !((_event$data$extraUrlP2 = event.data.extraUrlParams) !== null && _event$data$extraUrlP2 !== void 0 && _event$data$extraUrlP2.jwt);
-      createIframe(new URL("" + EVENT_MESSAGES[event.data.type] + urlParams, url).href, (_event$data7 = event.data) === null || _event$data7 === void 0 ? void 0 : _event$data7.accountId, (_event$data8 = event.data) === null || _event$data8 === void 0 ? void 0 : _event$data8.oauthConnectedAccount, undefined, undefined, includeDefaultJwt);
+      var includeDefaultJwt = !((_event$data$extraUrlP2 = event.data.extraUrlParams) != null && _event$data$extraUrlP2.jwt);
+      createIframe(new URL("" + EVENT_MESSAGES[event.data.type] + urlParams, url).href, (_event$data7 = event.data) == null ? void 0 : _event$data7.accountId, (_event$data8 = event.data) == null ? void 0 : _event$data8.oauthConnectedAccount, undefined, undefined, includeDefaultJwt);
     }
   };
 };
+
+// React component
 var LinkModal = function LinkModal(_ref5) {
   var jwt = _ref5.jwt,
     _ref5$url = _ref5.url,
