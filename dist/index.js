@@ -1,3 +1,13 @@
+function _extends() {
+  return _extends = Object.assign ? Object.assign.bind() : function (n) {
+    for (var e = 1; e < arguments.length; e++) {
+      var t = arguments[e];
+      for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]);
+    }
+    return n;
+  }, _extends.apply(null, arguments);
+}
+
 /* eslint-disable */
 
 window.Buffer = window.Buffer || require('buffer').Buffer;
@@ -24,23 +34,33 @@ var DEPOSIT_SUCCESS_PARAM = 'success';
 var DEPOSIT_SUCCESS_PARAM_FOR_MERCHANT = 'payment_success';
 var DEPOSIT_ERROR_STORAGE_KEY = 'deposit_error';
 var DEPOSIT_JWT_LOCAL_STORAGE_KEY = 'deposit_jwt';
+var DEPOSIT_LANG_LOCAL_STORAGE_KEY = 'deposit_lang';
 var MODAL_TYPE_LOCAL_STORAGE_KEY = 'modal_type';
 var handleOpen = function handleOpen(message, accountId, oauthConnectedAccount, extraUrlParams) {
   if (message === void 0) {
     message = '';
   }
+  console.log("handleOpen(message=" + message + ", extraUrlParams=" + JSON.stringify(extraUrlParams, null, 2) + ")");
   if (!Object.keys(EVENT_MESSAGES).includes(message)) {
     message = 'linkConnect';
   }
   if (extraUrlParams != null && extraUrlParams.jwt) {
     localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, extraUrlParams.jwt);
   }
+  if (extraUrlParams != null && extraUrlParams.lang) {
+    localStorage.setItem(DEPOSIT_LANG_LOCAL_STORAGE_KEY, extraUrlParams.lang);
+  }
+  var storedLang = localStorage.getItem(DEPOSIT_LANG_LOCAL_STORAGE_KEY);
+  var mergedExtraUrlParams = _extends({}, extraUrlParams != null ? extraUrlParams : {});
+  if (!Object.hasOwn(mergedExtraUrlParams, 'lang') && storedLang) {
+    mergedExtraUrlParams.lang = storedLang;
+  }
   localStorage.setItem(MODAL_TYPE_LOCAL_STORAGE_KEY, message);
   window.parent.postMessage({
     type: message,
     accountId: accountId,
     oauthConnectedAccount: oauthConnectedAccount,
-    extraUrlParams: extraUrlParams
+    extraUrlParams: mergedExtraUrlParams
   }, '*');
 };
 var handleClose = function handleClose(endResult) {

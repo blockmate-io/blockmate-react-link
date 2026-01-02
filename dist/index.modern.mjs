@@ -1,3 +1,13 @@
+function _extends() {
+  return _extends = Object.assign ? Object.assign.bind() : function (n) {
+    for (var e = 1; e < arguments.length; e++) {
+      var t = arguments[e];
+      for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]);
+    }
+    return n;
+  }, _extends.apply(null, arguments);
+}
+
 /* eslint-disable */
 
 window.Buffer = window.Buffer || require('buffer').Buffer;
@@ -24,20 +34,30 @@ const DEPOSIT_SUCCESS_PARAM = 'success';
 const DEPOSIT_SUCCESS_PARAM_FOR_MERCHANT = 'payment_success';
 const DEPOSIT_ERROR_STORAGE_KEY = 'deposit_error';
 const DEPOSIT_JWT_LOCAL_STORAGE_KEY = 'deposit_jwt';
+const DEPOSIT_LANG_LOCAL_STORAGE_KEY = 'deposit_lang';
 const MODAL_TYPE_LOCAL_STORAGE_KEY = 'modal_type';
 const handleOpen = (message = '', accountId, oauthConnectedAccount, extraUrlParams) => {
+  console.log(`handleOpen(message=${message}, extraUrlParams=${JSON.stringify(extraUrlParams, null, 2)})`);
   if (!Object.keys(EVENT_MESSAGES).includes(message)) {
     message = 'linkConnect';
   }
   if (extraUrlParams != null && extraUrlParams.jwt) {
     localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, extraUrlParams.jwt);
   }
+  if (extraUrlParams != null && extraUrlParams.lang) {
+    localStorage.setItem(DEPOSIT_LANG_LOCAL_STORAGE_KEY, extraUrlParams.lang);
+  }
+  const storedLang = localStorage.getItem(DEPOSIT_LANG_LOCAL_STORAGE_KEY);
+  const mergedExtraUrlParams = _extends({}, extraUrlParams != null ? extraUrlParams : {});
+  if (!Object.hasOwn(mergedExtraUrlParams, 'lang') && storedLang) {
+    mergedExtraUrlParams.lang = storedLang;
+  }
   localStorage.setItem(MODAL_TYPE_LOCAL_STORAGE_KEY, message);
   window.parent.postMessage({
     type: message,
     accountId,
     oauthConnectedAccount,
-    extraUrlParams
+    extraUrlParams: mergedExtraUrlParams
   }, '*');
 };
 const handleClose = endResult => {

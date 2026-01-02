@@ -32,6 +32,7 @@ const DEPOSIT_SUCCESS_PARAM = 'success'
 const DEPOSIT_SUCCESS_PARAM_FOR_MERCHANT = 'payment_success'
 const DEPOSIT_ERROR_STORAGE_KEY = 'deposit_error'
 const DEPOSIT_JWT_LOCAL_STORAGE_KEY = 'deposit_jwt'
+const DEPOSIT_LANG_LOCAL_STORAGE_KEY = 'deposit_lang'
 const MODAL_TYPE_LOCAL_STORAGE_KEY = 'modal_type'
 
 export const handleOpen = (
@@ -40,15 +41,31 @@ export const handleOpen = (
   oauthConnectedAccount,
   extraUrlParams
 ) => {
+  console.log(`handleOpen(message=${message}, extraUrlParams=${JSON.stringify(extraUrlParams, null, 2)})`);
   if (!Object.keys(EVENT_MESSAGES).includes(message)) {
     message = 'linkConnect'
   }
   if (extraUrlParams?.jwt) {
     localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, extraUrlParams.jwt)
   }
+  if (extraUrlParams?.lang) {
+    localStorage.setItem(DEPOSIT_LANG_LOCAL_STORAGE_KEY, extraUrlParams.lang)
+  }
+  const storedLang = localStorage.getItem(DEPOSIT_LANG_LOCAL_STORAGE_KEY)
+  const mergedExtraUrlParams = {
+    ...(extraUrlParams ?? {})
+  }
+  if (!Object.hasOwn(mergedExtraUrlParams, 'lang') && storedLang) {
+    mergedExtraUrlParams.lang = storedLang
+  }
   localStorage.setItem(MODAL_TYPE_LOCAL_STORAGE_KEY, message)
   window.parent.postMessage(
-    { type: message, accountId, oauthConnectedAccount, extraUrlParams },
+    {
+      type: message,
+      accountId,
+      oauthConnectedAccount,
+      extraUrlParams: mergedExtraUrlParams
+    },
     '*'
   )
 }
