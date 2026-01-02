@@ -40,7 +40,6 @@ var handleOpen = function handleOpen(message, accountId, oauthConnectedAccount, 
   if (message === void 0) {
     message = '';
   }
-  console.log("handleOpen(message=" + message + ", extraUrlParams=" + JSON.stringify(extraUrlParams, null, 2) + ")");
   if (!Object.keys(EVENT_MESSAGES).includes(message)) {
     message = 'linkConnect';
   }
@@ -191,11 +190,19 @@ var createLinkModal = function createLinkModal(_ref) {
     var existingIframe = document.getElementById(iframeId);
     if (!existingIframe) {
       createSpinner();
+      var iframeUrl = new URL(url);
       var parentUrlEncoded = Buffer.from(window.location.href).toString('base64');
       var token = includeDefaultJwt && (jwt || localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY));
+      var storedLang = localStorage.getItem(DEPOSIT_LANG_LOCAL_STORAGE_KEY);
+      var mergedAdditionalUrlParams = _extends({}, additionalUrlParams != null ? additionalUrlParams : {});
+      if (iframeUrl.searchParams.has('lang')) {
+        delete mergedAdditionalUrlParams.lang;
+      } else if (!Object.hasOwn(mergedAdditionalUrlParams, 'lang') && storedLang) {
+        mergedAdditionalUrlParams.lang = storedLang;
+      }
       var params = new URLSearchParams(window.location.search);
       var providerNameParam = params.get('providerName');
-      var urlParamsArray = [['jwt', token], ['accountId', accountId], ['step', step], ['depositError', depositError], ['providerName', providerNameParam], ['parentUrlEncoded', parentUrlEncoded]].concat(Object.entries(additionalUrlParams != null ? additionalUrlParams : {})).filter(function (_ref2) {
+      var urlParamsArray = [['jwt', token], ['accountId', accountId], ['step', step], ['depositError', depositError], ['providerName', providerNameParam], ['parentUrlEncoded', parentUrlEncoded]].concat(Object.entries(mergedAdditionalUrlParams)).filter(function (_ref2) {
         var value = _ref2[1];
         return value;
       });

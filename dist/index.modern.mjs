@@ -37,7 +37,6 @@ const DEPOSIT_JWT_LOCAL_STORAGE_KEY = 'deposit_jwt';
 const DEPOSIT_LANG_LOCAL_STORAGE_KEY = 'deposit_lang';
 const MODAL_TYPE_LOCAL_STORAGE_KEY = 'modal_type';
 const handleOpen = (message = '', accountId, oauthConnectedAccount, extraUrlParams) => {
-  console.log(`handleOpen(message=${message}, extraUrlParams=${JSON.stringify(extraUrlParams, null, 2)})`);
   if (!Object.keys(EVENT_MESSAGES).includes(message)) {
     message = 'linkConnect';
   }
@@ -197,11 +196,19 @@ const createLinkModal = ({
     const existingIframe = document.getElementById(iframeId);
     if (!existingIframe) {
       createSpinner();
+      const iframeUrl = new URL(url);
       const parentUrlEncoded = Buffer.from(window.location.href).toString('base64');
       const token = includeDefaultJwt && (jwt || localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY));
+      const storedLang = localStorage.getItem(DEPOSIT_LANG_LOCAL_STORAGE_KEY);
+      const mergedAdditionalUrlParams = _extends({}, _additionalUrlParams != null ? _additionalUrlParams : {});
+      if (iframeUrl.searchParams.has('lang')) {
+        delete mergedAdditionalUrlParams.lang;
+      } else if (!Object.hasOwn(mergedAdditionalUrlParams, 'lang') && storedLang) {
+        mergedAdditionalUrlParams.lang = storedLang;
+      }
       const params = new URLSearchParams(window.location.search);
       const providerNameParam = params.get('providerName');
-      const urlParamsArray = [['jwt', token], ['accountId', accountId], ['step', step], ['depositError', depositError], ['providerName', providerNameParam], ['parentUrlEncoded', parentUrlEncoded], ...Object.entries(_additionalUrlParams != null ? _additionalUrlParams : {})].filter(([_, value]) => value);
+      const urlParamsArray = [['jwt', token], ['accountId', accountId], ['step', step], ['depositError', depositError], ['providerName', providerNameParam], ['parentUrlEncoded', parentUrlEncoded], ...Object.entries(mergedAdditionalUrlParams)].filter(([_, value]) => value);
       let urlParams = urlParamsArray.map(([key, value]) => `${key}=${value}`).join('&');
       if (url.includes('?')) {
         urlParams = `&${urlParams}`;
