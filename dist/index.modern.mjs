@@ -21,6 +21,7 @@ const EVENT_MESSAGES = {
   withdrawAssets: `withdraw-assets`,
   close: 'blockmate-iframe-close',
   redirect: 'redirect',
+  redirectClose: 'redirect-close',
   deposit: 'deposit-exchange',
   directDeposit: 'deposit-wallet-connect',
   withdrawal: 'withdrawal-exchange'
@@ -70,6 +71,11 @@ const handleRedirect = (targetUrl, inNewTab = false) => {
     type: 'redirect',
     targetUrl,
     inNewTab
+  }, '*');
+};
+const handleCloseRedirect = () => {
+  window.parent.postMessage({
+    type: 'redirect-close'
   }, '*');
 };
 const handleInit = () => {
@@ -249,14 +255,15 @@ const createLinkModal = ({
   startDepositSuccessPolling();
   startOauthSuccessPolling();
   startLocalStoragePolling();
+  let redirectWindow = null;
   window.onmessage = function (event) {
-    var _event$data2, _event$data3, _event$data4, _event$data5;
+    var _event$data2, _event$data3, _event$data4, _event$data5, _event$data6;
     if (!Object.hasOwn(EVENT_MESSAGES, event.data.type)) {
       return null;
     }
 
     // These actions can only be called from within the iframe, check origin as they can perform redirects of the parent
-    if (['close', 'redirect'].includes(event == null || (_event$data2 = event.data) == null ? void 0 : _event$data2.type)) {
+    if (['close', 'redirect', 'redirect-close'].includes(event == null || (_event$data2 = event.data) == null ? void 0 : _event$data2.type)) {
       if (!TRUSTED_ORIGINS.includes(event.origin)) {
         return null;
       }
@@ -272,18 +279,35 @@ const createLinkModal = ({
       if (jwt) {
         localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
       }
-      const opened = window.open(event.data.targetUrl, event.data.inNewTab ? '_blank' : '_self');
-      if (!opened) {
-        console.error('Redirect BLOCKED');
+      if (event.data.inNewTab) {
+        redirectWindow = window.open(event.data.targetUrl, '_blank');
+        if (!redirectWindow) {
+          console.error('Redirect blocked by browser popup blocker', {
+            targetUrl: event.data.targetUrl,
+            inNewTab: true,
+            origin: event.origin
+          });
+        }
+      } else {
+        redirectWindow = null;
+        window.location.assign(event.data.targetUrl);
       }
+    } else if ((event == null || (_event$data6 = event.data) == null ? void 0 : _event$data6.type) === 'redirect-close') {
+      console.log(`Called redirect-close and redirectWindow=${JSON.stringify(redirectWindow, null, 2)}`);
+      if (redirectWindow && !redirectWindow.closed) {
+        console.log('Closing');
+        redirectWindow.close();
+      }
+      console.log('Resetting redirectWindow');
+      redirectWindow = null;
     } else {
-      var _event$data$extraUrlP, _event$data6, _event$data$extraUrlP2, _event$data7, _event$data8;
-      let urlParams = Object.entries((_event$data$extraUrlP = event == null || (_event$data6 = event.data) == null ? void 0 : _event$data6.extraUrlParams) != null ? _event$data$extraUrlP : {}).map(([key, value]) => `${key}=${value}`).join('&');
+      var _event$data$extraUrlP, _event$data7, _event$data$extraUrlP2, _event$data8, _event$data9;
+      let urlParams = Object.entries((_event$data$extraUrlP = event == null || (_event$data7 = event.data) == null ? void 0 : _event$data7.extraUrlParams) != null ? _event$data$extraUrlP : {}).map(([key, value]) => `${key}=${value}`).join('&');
       if (urlParams.length > 0) {
         urlParams = `?${urlParams}`;
       }
       const includeDefaultJwt = !((_event$data$extraUrlP2 = event.data.extraUrlParams) != null && _event$data$extraUrlP2.jwt);
-      createIframe(new URL(`${EVENT_MESSAGES[event.data.type]}${urlParams}`, _url).href, (_event$data7 = event.data) == null ? void 0 : _event$data7.accountId, (_event$data8 = event.data) == null ? void 0 : _event$data8.oauthConnectedAccount, undefined, undefined, includeDefaultJwt);
+      createIframe(new URL(`${EVENT_MESSAGES[event.data.type]}${urlParams}`, _url).href, (_event$data8 = event.data) == null ? void 0 : _event$data8.accountId, (_event$data9 = event.data) == null ? void 0 : _event$data9.oauthConnectedAccount, undefined, undefined, includeDefaultJwt);
     }
   };
 };
@@ -308,10 +332,11 @@ if (typeof window !== 'undefined') {
     handleOpen,
     handleClose,
     handleRedirect,
+    handleCloseRedirect,
     createLinkModal,
     handleInit
   };
 }
 
-export { LinkModal, createLinkModal, handleClose, handleInit, handleOpen, handleRedirect };
+export { LinkModal, createLinkModal, handleClose, handleCloseRedirect, handleInit, handleOpen, handleRedirect };
 //# sourceMappingURL=index.modern.mjs.map

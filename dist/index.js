@@ -21,6 +21,7 @@ var EVENT_MESSAGES = {
   withdrawAssets: "withdraw-assets",
   close: 'blockmate-iframe-close',
   redirect: 'redirect',
+  redirectClose: 'redirect-close',
   deposit: 'deposit-exchange',
   directDeposit: 'deposit-wallet-connect',
   withdrawal: 'withdrawal-exchange'
@@ -76,6 +77,11 @@ var handleRedirect = function handleRedirect(targetUrl, inNewTab) {
     type: 'redirect',
     targetUrl: targetUrl,
     inNewTab: inNewTab
+  }, '*');
+};
+var handleCloseRedirect = function handleCloseRedirect() {
+  window.parent.postMessage({
+    type: 'redirect-close'
   }, '*');
 };
 var handleInit = function handleInit() {
@@ -250,14 +256,15 @@ var createLinkModal = function createLinkModal(_ref) {
   startDepositSuccessPolling();
   startOauthSuccessPolling();
   startLocalStoragePolling();
+  var redirectWindow = null;
   window.onmessage = function (event) {
-    var _event$data2, _event$data3, _event$data4, _event$data5;
+    var _event$data2, _event$data3, _event$data4, _event$data5, _event$data6;
     if (!Object.hasOwn(EVENT_MESSAGES, event.data.type)) {
       return null;
     }
 
     // These actions can only be called from within the iframe, check origin as they can perform redirects of the parent
-    if (['close', 'redirect'].includes(event == null || (_event$data2 = event.data) == null ? void 0 : _event$data2.type)) {
+    if (['close', 'redirect', 'redirect-close'].includes(event == null || (_event$data2 = event.data) == null ? void 0 : _event$data2.type)) {
       if (!TRUSTED_ORIGINS.includes(event.origin)) {
         return null;
       }
@@ -273,13 +280,30 @@ var createLinkModal = function createLinkModal(_ref) {
       if (jwt) {
         localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
       }
-      var opened = window.open(event.data.targetUrl, event.data.inNewTab ? '_blank' : '_self');
-      if (!opened) {
-        console.error('Redirect BLOCKED');
+      if (event.data.inNewTab) {
+        redirectWindow = window.open(event.data.targetUrl, '_blank');
+        if (!redirectWindow) {
+          console.error('Redirect blocked by browser popup blocker', {
+            targetUrl: event.data.targetUrl,
+            inNewTab: true,
+            origin: event.origin
+          });
+        }
+      } else {
+        redirectWindow = null;
+        window.location.assign(event.data.targetUrl);
       }
+    } else if ((event == null || (_event$data6 = event.data) == null ? void 0 : _event$data6.type) === 'redirect-close') {
+      console.log("Called redirect-close and redirectWindow=" + JSON.stringify(redirectWindow, null, 2));
+      if (redirectWindow && !redirectWindow.closed) {
+        console.log('Closing');
+        redirectWindow.close();
+      }
+      console.log('Resetting redirectWindow');
+      redirectWindow = null;
     } else {
-      var _event$data$extraUrlP, _event$data6, _event$data$extraUrlP2, _event$data7, _event$data8;
-      var urlParams = Object.entries((_event$data$extraUrlP = event == null || (_event$data6 = event.data) == null ? void 0 : _event$data6.extraUrlParams) != null ? _event$data$extraUrlP : {}).map(function (_ref4) {
+      var _event$data$extraUrlP, _event$data7, _event$data$extraUrlP2, _event$data8, _event$data9;
+      var urlParams = Object.entries((_event$data$extraUrlP = event == null || (_event$data7 = event.data) == null ? void 0 : _event$data7.extraUrlParams) != null ? _event$data$extraUrlP : {}).map(function (_ref4) {
         var key = _ref4[0],
           value = _ref4[1];
         return key + "=" + value;
@@ -288,7 +312,7 @@ var createLinkModal = function createLinkModal(_ref) {
         urlParams = "?" + urlParams;
       }
       var includeDefaultJwt = !((_event$data$extraUrlP2 = event.data.extraUrlParams) != null && _event$data$extraUrlP2.jwt);
-      createIframe(new URL("" + EVENT_MESSAGES[event.data.type] + urlParams, url).href, (_event$data7 = event.data) == null ? void 0 : _event$data7.accountId, (_event$data8 = event.data) == null ? void 0 : _event$data8.oauthConnectedAccount, undefined, undefined, includeDefaultJwt);
+      createIframe(new URL("" + EVENT_MESSAGES[event.data.type] + urlParams, url).href, (_event$data8 = event.data) == null ? void 0 : _event$data8.accountId, (_event$data9 = event.data) == null ? void 0 : _event$data9.oauthConnectedAccount, undefined, undefined, includeDefaultJwt);
     }
   };
 };
@@ -315,6 +339,7 @@ if (typeof window !== 'undefined') {
     handleOpen: handleOpen,
     handleClose: handleClose,
     handleRedirect: handleRedirect,
+    handleCloseRedirect: handleCloseRedirect,
     createLinkModal: createLinkModal,
     handleInit: handleInit
   };
@@ -323,6 +348,7 @@ if (typeof window !== 'undefined') {
 exports.LinkModal = LinkModal;
 exports.createLinkModal = createLinkModal;
 exports.handleClose = handleClose;
+exports.handleCloseRedirect = handleCloseRedirect;
 exports.handleInit = handleInit;
 exports.handleOpen = handleOpen;
 exports.handleRedirect = handleRedirect;

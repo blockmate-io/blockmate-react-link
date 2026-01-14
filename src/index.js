@@ -12,6 +12,7 @@ const EVENT_MESSAGES = {
   withdrawAssets: `withdraw-assets`,
   close: 'blockmate-iframe-close',
   redirect: 'redirect',
+  redirectClose: 'redirect-close',
   deposit: 'deposit-exchange',
   directDeposit: 'deposit-wallet-connect',
   withdrawal: 'withdrawal-exchange',
@@ -75,6 +76,10 @@ export const handleClose = (endResult) => {
 
 export const handleRedirect = (targetUrl, inNewTab = false) => {
   window.parent.postMessage({ type: 'redirect', targetUrl, inNewTab }, '*')
+}
+
+export const handleCloseRedirect = () => {
+  window.parent.postMessage({ type: 'redirect-close' }, '*')
 }
 
 export const handleInit = () => {
@@ -325,13 +330,15 @@ export const createLinkModal = ({
   startOauthSuccessPolling()
   startLocalStoragePolling()
 
+  let redirectWindow = null
+
   window.onmessage = function (event) {
     if (!Object.hasOwn(EVENT_MESSAGES, event.data.type)) {
       return null
     }
 
     // These actions can only be called from within the iframe, check origin as they can perform redirects of the parent
-    if (['close', 'redirect'].includes(event?.data?.type)) {
+    if (['close', 'redirect', 'redirect-close'].includes(event?.data?.type)) {
       if (!TRUSTED_ORIGINS.includes(event.origin)) {
         return null
       }
@@ -348,10 +355,27 @@ export const createLinkModal = ({
       if (jwt) {
         localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt)
       }
-      const opened = window.open(event.data.targetUrl, event.data.inNewTab ? '_blank' : '_self');
-      if (!opened) {
-        console.error('Redirect BLOCKED');
+      if (event.data.inNewTab) {
+        redirectWindow = window.open(event.data.targetUrl, '_blank')
+        if (!redirectWindow) {
+          console.error('Redirect blocked by browser popup blocker', {
+            targetUrl: event.data.targetUrl,
+            inNewTab: true,
+            origin: event.origin
+          })
+        }
+      } else {
+        redirectWindow = null
+        window.location.assign(event.data.targetUrl)
       }
+    } else if (event?.data?.type === 'redirect-close') {
+      console.log(`Called redirect-close and redirectWindow=${JSON.stringify(redirectWindow, null, 2)}`);
+      if (redirectWindow && !redirectWindow.closed) {
+        console.log('Closing');
+        redirectWindow.close()
+      }
+      console.log('Resetting redirectWindow');
+      redirectWindow = null
     } else {
       let urlParams = Object.entries(event?.data?.extraUrlParams ?? {})
         .map(([key, value]) => `${key}=${value}`)
@@ -388,6 +412,7 @@ if (typeof window !== 'undefined') {
     handleOpen,
     handleClose,
     handleRedirect,
+    handleCloseRedirect,
     createLinkModal,
     handleInit
   }
