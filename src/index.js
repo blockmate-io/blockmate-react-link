@@ -79,7 +79,7 @@ export const handleRedirect = (targetUrl, inNewTab = false) => {
 }
 
 export const handleCloseRedirect = () => {
-  window.parent.postMessage({ type: 'redirect-close' }, '*')
+  window.parent.postMessage({ type: 'redirectClose' }, '*')
 }
 
 export const handleInit = () => {
@@ -338,7 +338,7 @@ export const createLinkModal = ({
     }
 
     // These actions can only be called from within the iframe, check origin as they can perform redirects of the parent
-    if (['close', 'redirect', 'redirect-close'].includes(event?.data?.type)) {
+    if (['close', 'redirect', 'redirectClose'].includes(event?.data?.type)) {
       if (!TRUSTED_ORIGINS.includes(event.origin)) {
         return null
       }
@@ -368,13 +368,10 @@ export const createLinkModal = ({
         redirectWindow = null
         window.location.assign(event.data.targetUrl)
       }
-    } else if (event?.data?.type === 'redirect-close') {
-      console.log(`Called redirect-close and redirectWindow=${JSON.stringify(redirectWindow, null, 2)}`);
+    } else if (event?.data?.type === 'redirectClose') {
       if (redirectWindow && !redirectWindow.closed) {
-        console.log('Closing');
         redirectWindow.close()
       }
-      console.log('Resetting redirectWindow');
       redirectWindow = null
     } else {
       let urlParams = Object.entries(event?.data?.extraUrlParams ?? {})

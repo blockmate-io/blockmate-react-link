@@ -38,6 +38,12 @@ const DEPOSIT_JWT_LOCAL_STORAGE_KEY = 'deposit_jwt';
 const DEPOSIT_LANG_LOCAL_STORAGE_KEY = 'deposit_lang';
 const MODAL_TYPE_LOCAL_STORAGE_KEY = 'modal_type';
 const handleOpen = (message = '', accountId, oauthConnectedAccount, extraUrlParams) => {
+  console.log('[BlockmateLink] handleOpen called', {
+    message,
+    accountId,
+    oauthConnectedAccount,
+    extraUrlParams
+  });
   if (!Object.keys(EVENT_MESSAGES).includes(message)) {
     message = 'linkConnect';
   }
@@ -52,6 +58,10 @@ const handleOpen = (message = '', accountId, oauthConnectedAccount, extraUrlPara
   if (!Object.hasOwn(mergedExtraUrlParams, 'lang') && storedLang) {
     mergedExtraUrlParams.lang = storedLang;
   }
+  console.log('[BlockmateLink] handleOpen merged params', {
+    message,
+    mergedExtraUrlParams
+  });
   localStorage.setItem(MODAL_TYPE_LOCAL_STORAGE_KEY, message);
   window.parent.postMessage({
     type: message,
@@ -74,8 +84,9 @@ const handleRedirect = (targetUrl, inNewTab = false) => {
   }, '*');
 };
 const handleCloseRedirect = () => {
+  console.log('[BlockmateLink] handleCloseRedirect called');
   window.parent.postMessage({
-    type: 'redirect-close'
+    type: 'redirectClose'
   }, '*');
 };
 const handleInit = () => {
@@ -257,25 +268,49 @@ const createLinkModal = ({
   startLocalStoragePolling();
   let redirectWindow = null;
   window.onmessage = function (event) {
-    var _event$data2, _event$data3, _event$data4, _event$data5, _event$data6;
+    var _event$data2, _event$data4, _event$data6, _event$data7, _event$data9, _event$data10;
+    console.log('[BlockmateLink] window.onmessage received', {
+      origin: event.origin,
+      type: event == null || (_event$data2 = event.data) == null ? void 0 : _event$data2.type,
+      data: event == null ? void 0 : event.data
+    });
     if (!Object.hasOwn(EVENT_MESSAGES, event.data.type)) {
+      var _event$data3;
+      console.log('[BlockmateLink] window.onmessage ignored (unknown type)', {
+        type: event == null || (_event$data3 = event.data) == null ? void 0 : _event$data3.type
+      });
       return null;
     }
 
     // These actions can only be called from within the iframe, check origin as they can perform redirects of the parent
-    if (['close', 'redirect', 'redirect-close'].includes(event == null || (_event$data2 = event.data) == null ? void 0 : _event$data2.type)) {
+    if (['close', 'redirect', 'redirect-close'].includes(event == null || (_event$data4 = event.data) == null ? void 0 : _event$data4.type)) {
       if (!TRUSTED_ORIGINS.includes(event.origin)) {
+        var _event$data5;
+        console.log('[BlockmateLink] window.onmessage ignored (untrusted origin)', {
+          origin: event.origin,
+          type: event == null || (_event$data5 = event.data) == null ? void 0 : _event$data5.type
+        });
         return null;
       }
     }
-    if ((event == null || (_event$data3 = event.data) == null ? void 0 : _event$data3.type) === 'init') {
+    if ((event == null || (_event$data6 = event.data) == null ? void 0 : _event$data6.type) === 'init') {
+      console.log('[BlockmateLink] window.onmessage init');
       localStorage.removeItem(OAUTH_LOCAL_STORAGE_KEY);
-    } else if ((event == null || (_event$data4 = event.data) == null ? void 0 : _event$data4.type) === 'close') {
+    } else if ((event == null || (_event$data7 = event.data) == null ? void 0 : _event$data7.type) === 'close') {
+      var _event$data8;
+      console.log('[BlockmateLink] window.onmessage close', {
+        endResult: event == null || (_event$data8 = event.data) == null ? void 0 : _event$data8.endResult
+      });
       if (jwt) {
         localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
       }
       removeIframe(event);
-    } else if ((event == null || (_event$data5 = event.data) == null ? void 0 : _event$data5.type) === 'redirect') {
+    } else if ((event == null || (_event$data9 = event.data) == null ? void 0 : _event$data9.type) === 'redirect') {
+      var _event$data0, _event$data1;
+      console.log('[BlockmateLink] window.onmessage redirect', {
+        targetUrl: event == null || (_event$data0 = event.data) == null ? void 0 : _event$data0.targetUrl,
+        inNewTab: event == null || (_event$data1 = event.data) == null ? void 0 : _event$data1.inNewTab
+      });
       if (jwt) {
         localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
       }
@@ -292,22 +327,28 @@ const createLinkModal = ({
         redirectWindow = null;
         window.location.assign(event.data.targetUrl);
       }
-    } else if ((event == null || (_event$data6 = event.data) == null ? void 0 : _event$data6.type) === 'redirect-close') {
-      console.log(`Called redirect-close and redirectWindow=${JSON.stringify(redirectWindow, null, 2)}`);
+    } else if ((event == null || (_event$data10 = event.data) == null ? void 0 : _event$data10.type) === 'redirect-close') {
+      console.log('[BlockmateLink] window.onmessage redirect-close', {
+        redirectWindow
+      });
       if (redirectWindow && !redirectWindow.closed) {
-        console.log('Closing');
+        console.log('[BlockmateLink] window.onmessage closing redirectWindow');
         redirectWindow.close();
       }
-      console.log('Resetting redirectWindow');
+      console.log('[BlockmateLink] window.onmessage resetting redirectWindow');
       redirectWindow = null;
     } else {
-      var _event$data$extraUrlP, _event$data7, _event$data$extraUrlP2, _event$data8, _event$data9;
-      let urlParams = Object.entries((_event$data$extraUrlP = event == null || (_event$data7 = event.data) == null ? void 0 : _event$data7.extraUrlParams) != null ? _event$data$extraUrlP : {}).map(([key, value]) => `${key}=${value}`).join('&');
+      var _event$data11, _event$data12, _event$data$extraUrlP, _event$data13, _event$data$extraUrlP2, _event$data14, _event$data15;
+      console.log('[BlockmateLink] window.onmessage open iframe', {
+        type: event == null || (_event$data11 = event.data) == null ? void 0 : _event$data11.type,
+        extraUrlParams: event == null || (_event$data12 = event.data) == null ? void 0 : _event$data12.extraUrlParams
+      });
+      let urlParams = Object.entries((_event$data$extraUrlP = event == null || (_event$data13 = event.data) == null ? void 0 : _event$data13.extraUrlParams) != null ? _event$data$extraUrlP : {}).map(([key, value]) => `${key}=${value}`).join('&');
       if (urlParams.length > 0) {
         urlParams = `?${urlParams}`;
       }
       const includeDefaultJwt = !((_event$data$extraUrlP2 = event.data.extraUrlParams) != null && _event$data$extraUrlP2.jwt);
-      createIframe(new URL(`${EVENT_MESSAGES[event.data.type]}${urlParams}`, _url).href, (_event$data8 = event.data) == null ? void 0 : _event$data8.accountId, (_event$data9 = event.data) == null ? void 0 : _event$data9.oauthConnectedAccount, undefined, undefined, includeDefaultJwt);
+      createIframe(new URL(`${EVENT_MESSAGES[event.data.type]}${urlParams}`, _url).href, (_event$data14 = event.data) == null ? void 0 : _event$data14.accountId, (_event$data15 = event.data) == null ? void 0 : _event$data15.oauthConnectedAccount, undefined, undefined, includeDefaultJwt);
     }
   };
 };
