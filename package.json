@@ -9,7 +9,14 @@
     "url": "git+https://github.com/blockmate-io/blockmate-react-link.git"
   },
   "main": "dist/index.js",
-  "module": "dist/index.modern.js",
+  "module": "dist/index.modern.mjs",
+  "exports": {
+    ".": {
+      "import": "./dist/index.modern.mjs",
+      "require": "./dist/index.js",
+      "default": "./dist/index.modern.mjs"
+    }
+  },
   "source": "src/index.js",
   "engines": {
     "node": ">=10"
