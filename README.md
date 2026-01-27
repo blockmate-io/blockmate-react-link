@@ -6,7 +6,7 @@
 
 ## Install
 
-Run ```npm i blockmate-react-link```
+Run ```npm i @blockmate.io/blockmate-react-link```
 
 
 ## Usage
