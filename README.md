@@ -94,6 +94,10 @@ import { createLinkModal, handleOpen } from "blockmate-react-link";
 createLinkModal({
   url: "https://link.blockmate.io",
   jwt: "OBTAINED_JWT",  // Optional, can be provided in handleOpen instead
+  additionalUrlParams: {
+    merchantDescription: 'YourCompanyName',
+    merchantIcon: 'https://your-company-name.com/logo.png'
+  }
 });
 
 document.getElementById("open-button").addEventListener("click", () => {
