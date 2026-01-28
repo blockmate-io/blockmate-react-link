@@ -1,6 +1,7 @@
 /* eslint-disable */
+import { Buffer } from 'buffer'
 
-window.Buffer = window.Buffer || require('buffer').Buffer
+window.Buffer = window.Buffer || Buffer
 
 const EVENT_MESSAGES = {
   linkConnect: ``,

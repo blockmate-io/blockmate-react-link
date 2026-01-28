@@ -10,6 +10,22 @@ npm i @blockmate.io/blockmate-js-link
 
 ## Usage
 
+### Script (CDN) usage
+If you want to use this library without a bundler, include the IIFE build from a CDN and use the global.
+```html
+<script src="https://TODO/blockmate-js-link/1.0.0/index.iife.js"></script>
+<script>
+  BlockmateJSLink.createLinkModal({
+    url: "https://link.blockmate.io",
+    jwt: "USER_JWT_TOKEN"
+  });
+
+  document.getElementById("open-button").addEventListener("click", () => {
+    BlockmateJSLink.handleOpen("linkConnect");
+  });
+</script>
+```
+
 ### Deposits and withdrawals
 If you want to use this library for Blockmate deposit / withdrawal capabilities, follow this guide. For
 instructions on non-deposit capabilities, please jump to the next section.

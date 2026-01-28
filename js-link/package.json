@@ -22,7 +22,7 @@
     "node": ">=10"
   },
   "scripts": {
-    "build": "esbuild src/index.js --bundle --format=cjs --outfile=dist/index.js --platform=browser && esbuild src/index.js --bundle --format=esm --outfile=dist/index.modern.mjs --platform=browser",
+    "build": "esbuild src/index.js --bundle --format=cjs --outfile=dist/index.js --platform=browser && esbuild src/index.js --bundle --format=esm --outfile=dist/index.modern.mjs --platform=browser && esbuild src/index.js --bundle --format=iife --global-name=BlockmateJSLink --outfile=dist/index.iife.js --platform=browser",
     "start": "npm run build",
     "prepare": "npm run build"
   },
