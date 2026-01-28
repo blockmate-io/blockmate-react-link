@@ -393,17 +393,6 @@ export const createLinkModal = ({
   }
 }
 
-// React component
-export const LinkModal = ({
-  jwt,
-  url = 'https://link.blockmate.io/',
-  cleanupActions = {},
-  additionalUrlParams = null
-}) => {
-  createLinkModal({ jwt, url, cleanupActions, additionalUrlParams })
-  return null
-}
-
 if (typeof window !== 'undefined') {
   window.BlockmateLink = {
     handleOpen,

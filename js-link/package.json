@@ -1,0 +1,53 @@
+{
+  "name": "@blockmate.io/blockmate-js-link",
+  "version": "1.0.0",
+  "description": "Core (vanilla JS) package for Blockmate Link",
+  "author": "blockmate-io",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/blockmate-io/blockmate-react-link.git"
+  },
+  "main": "dist/index.js",
+  "module": "dist/index.modern.mjs",
+  "exports": {
+    ".": {
+      "import": "./dist/index.modern.mjs",
+      "require": "./dist/index.js",
+      "default": "./dist/index.modern.mjs"
+    }
+  },
+  "source": "src/index.js",
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "build": "esbuild src/index.js --bundle --format=cjs --outfile=dist/index.js --platform=browser && esbuild src/index.js --bundle --format=esm --outfile=dist/index.modern.mjs --platform=browser",
+    "start": "npm run build",
+    "prepare": "npm run build"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.2"
+  },
+  "files": [
+    "dist"
+  ],
+  "bugs": {
+    "url": "https://github.com/blockmate-io/blockmate-react-link/issues"
+  },
+  "homepage": "https://github.com/blockmate-io/blockmate-react-link#readme",
+  "keywords": [
+    "blockmate",
+    "link",
+    "crypto",
+    "aisp",
+    "web3",
+    "api",
+    "personal",
+    "finance",
+    "management"
+  ],
+  "dependencies": {
+    "buffer": "^6.0.3"
+  }
+}
