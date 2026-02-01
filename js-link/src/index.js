@@ -26,6 +26,9 @@ const TRUSTED_ORIGINS = [
   'http://localhost:3000'
 ]
 
+const TAB_ID_SESSION_KEY = 'bm_deposit_id'
+const TAB_ID_PREFIX = 'blockmate'
+
 const OAUTH_QUERY_PARAM = 'oauthConnectedAccount'
 const OAUTH_LOCAL_STORAGE_KEY = 'oauth_connected_account'
 const DEPOSIT_OAUTH_SUCCESS_STEP = 'oauth_success'
@@ -37,6 +40,33 @@ const DEPOSIT_JWT_LOCAL_STORAGE_KEY = 'deposit_jwt'
 const DEPOSIT_LANG_LOCAL_STORAGE_KEY = 'deposit_lang'
 const MODAL_TYPE_LOCAL_STORAGE_KEY = 'modal_type'
 
+const getTabId = () => {
+  try {
+    const params = new URLSearchParams(window.location.search)
+    const depositId = params.get(DEPOSIT_ID_PARAM)
+    if (depositId) {
+      return depositId
+    }
+    return sessionStorage.getItem(TAB_ID_SESSION_KEY) || null
+  } catch (error) {
+    return null
+  }
+}
+
+const getNamespacedKey = (key) => {
+  const tabId = getTabId()
+  return tabId ? `${TAB_ID_PREFIX}:${tabId}:${key}` : key
+}
+
+const getLocalStorageItem = (key) =>
+  localStorage.getItem(getNamespacedKey(key))
+
+const setLocalStorageItem = (key, value) =>
+  localStorage.setItem(getNamespacedKey(key), value)
+
+const removeLocalStorageItem = (key) =>
+  localStorage.removeItem(getNamespacedKey(key))
+
 export const handleOpen = (
   message = '',
   accountId,
@@ -46,20 +76,23 @@ export const handleOpen = (
   if (!Object.keys(EVENT_MESSAGES).includes(message)) {
     message = 'linkConnect'
   }
+  if (extraUrlParams?.depositId) {
+    sessionStorage.setItem(TAB_ID_SESSION_KEY, extraUrlParams.depositId)
+  }
   if (extraUrlParams?.jwt) {
-    localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, extraUrlParams.jwt)
+    setLocalStorageItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, extraUrlParams.jwt)
   }
   if (extraUrlParams?.lang) {
-    localStorage.setItem(DEPOSIT_LANG_LOCAL_STORAGE_KEY, extraUrlParams.lang)
+    setLocalStorageItem(DEPOSIT_LANG_LOCAL_STORAGE_KEY, extraUrlParams.lang)
   }
-  const storedLang = localStorage.getItem(DEPOSIT_LANG_LOCAL_STORAGE_KEY)
+  const storedLang = getLocalStorageItem(DEPOSIT_LANG_LOCAL_STORAGE_KEY)
   const mergedExtraUrlParams = {
     ...(extraUrlParams ?? {})
   }
   if (!Object.hasOwn(mergedExtraUrlParams, 'lang') && storedLang) {
     mergedExtraUrlParams.lang = storedLang
   }
-  localStorage.setItem(MODAL_TYPE_LOCAL_STORAGE_KEY, message)
+  setLocalStorageItem(MODAL_TYPE_LOCAL_STORAGE_KEY, message)
   window.parent.postMessage(
     {
       type: message,
@@ -101,10 +134,7 @@ export const createLinkModal = ({
       const maybeOauthConnectedAccount = params.get(OAUTH_QUERY_PARAM)
       if (maybeOauthConnectedAccount) {
         params.delete(OAUTH_QUERY_PARAM)
-        localStorage.setItem(
-          OAUTH_LOCAL_STORAGE_KEY,
-          maybeOauthConnectedAccount
-        )
+        setLocalStorageItem(OAUTH_LOCAL_STORAGE_KEY, maybeOauthConnectedAccount)
         // // This will redirect the user to the same page without the query param, but with state in localStorage
         // location.replace(
         //   `${window.location.origin}${
@@ -130,10 +160,10 @@ export const createLinkModal = ({
         return
       }
       if (maybeSuccessParam === 'true') {
-        localStorage.setItem(DEPOSIT_ERROR_STORAGE_KEY, 'success')
+        setLocalStorageItem(DEPOSIT_ERROR_STORAGE_KEY, 'success')
       } else if (maybeSuccessParam === 'false') {
         const detailParam = params.get('detail')
-        localStorage.setItem(DEPOSIT_ERROR_STORAGE_KEY, detailParam)
+        setLocalStorageItem(DEPOSIT_ERROR_STORAGE_KEY, detailParam)
       }
       params.delete(DEPOSIT_SUCCESS_PARAM)
       params.delete('detail')
@@ -149,17 +179,17 @@ export const createLinkModal = ({
   // For oauth
   const startLocalStoragePolling = () => {
     const localStoragePollingInterval = setInterval(() => {
-      const oauthConnectedAccount = localStorage.getItem(
+      const oauthConnectedAccount = getLocalStorageItem(
         OAUTH_LOCAL_STORAGE_KEY
       )
       const currentUrl = new URL(window.location.href)
       const oauthQueryParamDeletedAlready =
         !currentUrl.searchParams.has(OAUTH_QUERY_PARAM)
-      const depositError = localStorage.getItem(DEPOSIT_ERROR_STORAGE_KEY)
+      const depositError = getLocalStorageItem(DEPOSIT_ERROR_STORAGE_KEY)
       const depositErrorParamDeletedAlready = !currentUrl.searchParams.has(
         DEPOSIT_SUCCESS_PARAM
       )
-      const modalType = localStorage.getItem(MODAL_TYPE_LOCAL_STORAGE_KEY)
+      const modalType = getLocalStorageItem(MODAL_TYPE_LOCAL_STORAGE_KEY)
       if (depositErrorParamDeletedAlready && typeof depositError === 'string') {
         createIframe(
           new URL(EVENT_MESSAGES?.[modalType] ?? '', url).href,
@@ -168,11 +198,11 @@ export const createLinkModal = ({
           undefined,
           depositError
         )
-        localStorage.removeItem(DEPOSIT_ERROR_STORAGE_KEY)
+        removeLocalStorageItem(DEPOSIT_ERROR_STORAGE_KEY)
       } else if (oauthConnectedAccount && oauthQueryParamDeletedAlready) {
         let path = EVENT_MESSAGES.linkConnect
         let step
-        if (localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY)) {
+        if (getLocalStorageItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY)) {
           if (modalType === 'deposit') {
             path = EVENT_MESSAGES.deposit
             step = DEPOSIT_OAUTH_SUCCESS_STEP
@@ -192,7 +222,7 @@ export const createLinkModal = ({
         const params = new URLSearchParams(window.location.search)
         const maybeOauthConnectedAccount = params.get(OAUTH_QUERY_PARAM)
         if (!maybeOauthConnectedAccount) {
-          localStorage.removeItem(OAUTH_LOCAL_STORAGE_KEY)
+          removeLocalStorageItem(OAUTH_LOCAL_STORAGE_KEY)
         }
       }
     }, pollingTimeoutMs)
@@ -258,23 +288,34 @@ export const createLinkModal = ({
     if (!existingIframe) {
       createSpinner();
       const iframeUrl = new URL(url)
-      const parentUrlEncoded = Buffer.from(window.location.href).toString(
+      const parentUrl = new URL(window.location.href)
+      const tabId = getTabId()
+      if (tabId && !parentUrl.searchParams.has(DEPOSIT_ID_PARAM)) {
+        parentUrl.searchParams.set(DEPOSIT_ID_PARAM, tabId)
+      }
+      const parentUrlEncoded = Buffer.from(parentUrl.toString()).toString(
         'base64'
       )
       const token =
         includeDefaultJwt &&
-        (jwt || localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY))
-      const storedLang = localStorage.getItem(DEPOSIT_LANG_LOCAL_STORAGE_KEY)
+        (jwt || getLocalStorageItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY))
+      const storedLang = getLocalStorageItem(DEPOSIT_LANG_LOCAL_STORAGE_KEY)
       const mergedAdditionalUrlParams = {
         ...(additionalUrlParams ?? {})
       }
       if (iframeUrl.searchParams.has('lang')) {
         delete mergedAdditionalUrlParams.lang
-      } else if (!Object.hasOwn(mergedAdditionalUrlParams, 'lang') && storedLang) {
+      } else if (
+        !Object.hasOwn(mergedAdditionalUrlParams, 'lang') &&
+        storedLang
+      ) {
         mergedAdditionalUrlParams.lang = storedLang
       }
       const params = new URLSearchParams(window.location.search)
       const providerNameParam = params.get('providerName')
+      if (tabId && !iframeUrl.searchParams.has(DEPOSIT_ID_PARAM)) {
+        mergedAdditionalUrlParams[DEPOSIT_ID_PARAM] = tabId
+      }
       const urlParamsArray = [
         ['jwt', token],
         ['accountId', accountId],
@@ -346,15 +387,15 @@ export const createLinkModal = ({
     }
 
     if (event?.data?.type === 'init') {
-      localStorage.removeItem(OAUTH_LOCAL_STORAGE_KEY);
+      removeLocalStorageItem(OAUTH_LOCAL_STORAGE_KEY);
     } else if (event?.data?.type === 'close') {
       if (jwt) {
-        localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt)
+        setLocalStorageItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt)
       }
       removeIframe(event)
     } else if (event?.data?.type === 'redirect') {
       if (jwt) {
-        localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt)
+        setLocalStorageItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt)
       }
       if (event.data.inNewTab) {
         redirectWindow = window.open(event.data.targetUrl, '_blank')

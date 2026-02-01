@@ -1839,6 +1839,8 @@ var BlockmateJSLink = (() => {
     "https://link-cs.blockmate.io",
     "http://localhost:3000"
   ];
+  var TAB_ID_SESSION_KEY = "bm_deposit_id";
+  var TAB_ID_PREFIX = "blockmate";
   var OAUTH_QUERY_PARAM = "oauthConnectedAccount";
   var OAUTH_LOCAL_STORAGE_KEY = "oauth_connected_account";
   var DEPOSIT_OAUTH_SUCCESS_STEP = "oauth_success";
@@ -1849,24 +1851,46 @@ var BlockmateJSLink = (() => {
   var DEPOSIT_JWT_LOCAL_STORAGE_KEY = "deposit_jwt";
   var DEPOSIT_LANG_LOCAL_STORAGE_KEY = "deposit_lang";
   var MODAL_TYPE_LOCAL_STORAGE_KEY = "modal_type";
+  var getTabId = () => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const depositId = params.get(DEPOSIT_ID_PARAM);
+      if (depositId) {
+        return depositId;
+      }
+      return sessionStorage.getItem(TAB_ID_SESSION_KEY) || null;
+    } catch (error) {
+      return null;
+    }
+  };
+  var getNamespacedKey = (key) => {
+    const tabId = getTabId();
+    return tabId ? `${TAB_ID_PREFIX}:${tabId}:${key}` : key;
+  };
+  var getLocalStorageItem = (key) => localStorage.getItem(getNamespacedKey(key));
+  var setLocalStorageItem = (key, value) => localStorage.setItem(getNamespacedKey(key), value);
+  var removeLocalStorageItem = (key) => localStorage.removeItem(getNamespacedKey(key));
   var handleOpen = (message = "", accountId, oauthConnectedAccount, extraUrlParams) => {
     if (!Object.keys(EVENT_MESSAGES).includes(message)) {
       message = "linkConnect";
     }
+    if (extraUrlParams?.depositId) {
+      sessionStorage.setItem(TAB_ID_SESSION_KEY, extraUrlParams.depositId);
+    }
     if (extraUrlParams?.jwt) {
-      localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, extraUrlParams.jwt);
+      setLocalStorageItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, extraUrlParams.jwt);
     }
     if (extraUrlParams?.lang) {
-      localStorage.setItem(DEPOSIT_LANG_LOCAL_STORAGE_KEY, extraUrlParams.lang);
+      setLocalStorageItem(DEPOSIT_LANG_LOCAL_STORAGE_KEY, extraUrlParams.lang);
     }
-    const storedLang = localStorage.getItem(DEPOSIT_LANG_LOCAL_STORAGE_KEY);
+    const storedLang = getLocalStorageItem(DEPOSIT_LANG_LOCAL_STORAGE_KEY);
     const mergedExtraUrlParams = {
       ...extraUrlParams ?? {}
     };
     if (!Object.hasOwn(mergedExtraUrlParams, "lang") && storedLang) {
       mergedExtraUrlParams.lang = storedLang;
     }
-    localStorage.setItem(MODAL_TYPE_LOCAL_STORAGE_KEY, message);
+    setLocalStorageItem(MODAL_TYPE_LOCAL_STORAGE_KEY, message);
     window.parent.postMessage(
       {
         type: message,
@@ -1902,10 +1926,7 @@ var BlockmateJSLink = (() => {
         const maybeOauthConnectedAccount = params.get(OAUTH_QUERY_PARAM);
         if (maybeOauthConnectedAccount) {
           params.delete(OAUTH_QUERY_PARAM);
-          localStorage.setItem(
-            OAUTH_LOCAL_STORAGE_KEY,
-            maybeOauthConnectedAccount
-          );
+          setLocalStorageItem(OAUTH_LOCAL_STORAGE_KEY, maybeOauthConnectedAccount);
           window.close();
         }
       }, pollingTimeoutMs);
@@ -1921,10 +1942,10 @@ var BlockmateJSLink = (() => {
           return;
         }
         if (maybeSuccessParam === "true") {
-          localStorage.setItem(DEPOSIT_ERROR_STORAGE_KEY, "success");
+          setLocalStorageItem(DEPOSIT_ERROR_STORAGE_KEY, "success");
         } else if (maybeSuccessParam === "false") {
           const detailParam = params.get("detail");
-          localStorage.setItem(DEPOSIT_ERROR_STORAGE_KEY, detailParam);
+          setLocalStorageItem(DEPOSIT_ERROR_STORAGE_KEY, detailParam);
         }
         params.delete(DEPOSIT_SUCCESS_PARAM);
         params.delete("detail");
@@ -1936,16 +1957,16 @@ var BlockmateJSLink = (() => {
     };
     const startLocalStoragePolling = () => {
       const localStoragePollingInterval = setInterval(() => {
-        const oauthConnectedAccount = localStorage.getItem(
+        const oauthConnectedAccount = getLocalStorageItem(
           OAUTH_LOCAL_STORAGE_KEY
         );
         const currentUrl = new URL(window.location.href);
         const oauthQueryParamDeletedAlready = !currentUrl.searchParams.has(OAUTH_QUERY_PARAM);
-        const depositError = localStorage.getItem(DEPOSIT_ERROR_STORAGE_KEY);
+        const depositError = getLocalStorageItem(DEPOSIT_ERROR_STORAGE_KEY);
         const depositErrorParamDeletedAlready = !currentUrl.searchParams.has(
           DEPOSIT_SUCCESS_PARAM
         );
-        const modalType = localStorage.getItem(MODAL_TYPE_LOCAL_STORAGE_KEY);
+        const modalType = getLocalStorageItem(MODAL_TYPE_LOCAL_STORAGE_KEY);
         if (depositErrorParamDeletedAlready && typeof depositError === "string") {
           createIframe(
             new URL(EVENT_MESSAGES?.[modalType] ?? "", url).href,
@@ -1954,11 +1975,11 @@ var BlockmateJSLink = (() => {
             void 0,
             depositError
           );
-          localStorage.removeItem(DEPOSIT_ERROR_STORAGE_KEY);
+          removeLocalStorageItem(DEPOSIT_ERROR_STORAGE_KEY);
         } else if (oauthConnectedAccount && oauthQueryParamDeletedAlready) {
           let path = EVENT_MESSAGES.linkConnect;
           let step;
-          if (localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY)) {
+          if (getLocalStorageItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY)) {
             if (modalType === "deposit") {
               path = EVENT_MESSAGES.deposit;
               step = DEPOSIT_OAUTH_SUCCESS_STEP;
@@ -1977,7 +1998,7 @@ var BlockmateJSLink = (() => {
           const params = new URLSearchParams(window.location.search);
           const maybeOauthConnectedAccount = params.get(OAUTH_QUERY_PARAM);
           if (!maybeOauthConnectedAccount) {
-            localStorage.removeItem(OAUTH_LOCAL_STORAGE_KEY);
+            removeLocalStorageItem(OAUTH_LOCAL_STORAGE_KEY);
           }
         }
       }, pollingTimeoutMs);
@@ -2027,11 +2048,16 @@ var BlockmateJSLink = (() => {
       if (!existingIframe) {
         createSpinner();
         const iframeUrl = new URL(url2);
-        const parentUrlEncoded = import_buffer.Buffer.from(window.location.href).toString(
+        const parentUrl = new URL(window.location.href);
+        const tabId = getTabId();
+        if (tabId && !parentUrl.searchParams.has(DEPOSIT_ID_PARAM)) {
+          parentUrl.searchParams.set(DEPOSIT_ID_PARAM, tabId);
+        }
+        const parentUrlEncoded = import_buffer.Buffer.from(parentUrl.toString()).toString(
           "base64"
         );
-        const token = includeDefaultJwt && (jwt || localStorage.getItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY));
-        const storedLang = localStorage.getItem(DEPOSIT_LANG_LOCAL_STORAGE_KEY);
+        const token = includeDefaultJwt && (jwt || getLocalStorageItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY));
+        const storedLang = getLocalStorageItem(DEPOSIT_LANG_LOCAL_STORAGE_KEY);
         const mergedAdditionalUrlParams = {
           ...additionalUrlParams ?? {}
         };
@@ -2042,6 +2068,9 @@ var BlockmateJSLink = (() => {
         }
         const params = new URLSearchParams(window.location.search);
         const providerNameParam = params.get("providerName");
+        if (tabId && !iframeUrl.searchParams.has(DEPOSIT_ID_PARAM)) {
+          mergedAdditionalUrlParams[DEPOSIT_ID_PARAM] = tabId;
+        }
         const urlParamsArray = [
           ["jwt", token],
           ["accountId", accountId],
@@ -2100,15 +2129,15 @@ var BlockmateJSLink = (() => {
         }
       }
       if (event?.data?.type === "init") {
-        localStorage.removeItem(OAUTH_LOCAL_STORAGE_KEY);
+        removeLocalStorageItem(OAUTH_LOCAL_STORAGE_KEY);
       } else if (event?.data?.type === "close") {
         if (jwt) {
-          localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
+          setLocalStorageItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
         }
         removeIframe(event);
       } else if (event?.data?.type === "redirect") {
         if (jwt) {
-          localStorage.setItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
+          setLocalStorageItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
         }
         if (event.data.inNewTab) {
           redirectWindow = window.open(event.data.targetUrl, "_blank");
