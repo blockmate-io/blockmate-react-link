@@ -1841,6 +1841,8 @@ var BlockmateJSLink = (() => {
   ];
   var TAB_ID_SESSION_KEY = "bm_deposit_id";
   var TAB_ID_PREFIX = "blockmate";
+  var KEY_TIMESTAMP_SUFFIX = "__ts";
+  var ONE_DAY_MS = 24 * 60 * 60 * 1e3;
   var OAUTH_QUERY_PARAM = "oauthConnectedAccount";
   var OAUTH_LOCAL_STORAGE_KEY = "oauth_connected_account";
   var DEPOSIT_OAUTH_SUCCESS_STEP = "oauth_success";
@@ -1863,17 +1865,60 @@ var BlockmateJSLink = (() => {
       return null;
     }
   };
-  var getNamespacedKey = (key) => {
-    const tabId = getTabId();
+  var getNamespacedKey = (key, tabId) => {
     return tabId ? `${TAB_ID_PREFIX}:${tabId}:${key}` : key;
   };
-  var getLocalStorageItem = (key) => localStorage.getItem(getNamespacedKey(key));
-  var setLocalStorageItem = (key, value) => localStorage.setItem(getNamespacedKey(key), value);
-  var removeLocalStorageItem = (key) => localStorage.removeItem(getNamespacedKey(key));
+  var isExpired = (timestampMs) => {
+    return Number.isFinite(timestampMs) && Date.now() - timestampMs > ONE_DAY_MS;
+  };
+  var getLocalStorageItem = (key) => {
+    const tabId = getTabId();
+    const storageKey = getNamespacedKey(key, tabId);
+    return localStorage.getItem(storageKey);
+  };
+  var setLocalStorageItem = (key, value) => {
+    const tabId = getTabId();
+    const storageKey = getNamespacedKey(key, tabId);
+    localStorage.setItem(storageKey, value);
+    if (tabId) {
+      localStorage.setItem(
+        `${storageKey}${KEY_TIMESTAMP_SUFFIX}`,
+        String(Date.now())
+      );
+    }
+  };
+  var removeLocalStorageItem = (key) => {
+    const tabId = getTabId();
+    const storageKey = getNamespacedKey(key, tabId);
+    localStorage.removeItem(storageKey);
+    if (tabId) {
+      localStorage.removeItem(`${storageKey}${KEY_TIMESTAMP_SUFFIX}`);
+    }
+  };
+  var cleanupExpiredStorageKeys = () => {
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (!key) {
+          continue;
+        }
+        if (key.startsWith(`${TAB_ID_PREFIX}:`) && key.endsWith(KEY_TIMESTAMP_SUFFIX)) {
+          const timestampValue = Number(localStorage.getItem(key));
+          if (isExpired(timestampValue)) {
+            const baseKey = key.slice(0, -KEY_TIMESTAMP_SUFFIX.length);
+            localStorage.removeItem(baseKey);
+            localStorage.removeItem(key);
+          }
+        }
+      }
+    } catch (error) {
+    }
+  };
   var handleOpen = (message = "", accountId, oauthConnectedAccount, extraUrlParams) => {
     if (!Object.keys(EVENT_MESSAGES).includes(message)) {
       message = "linkConnect";
     }
+    cleanupExpiredStorageKeys();
     if (extraUrlParams?.depositId) {
       sessionStorage.setItem(TAB_ID_SESSION_KEY, extraUrlParams.depositId);
     }

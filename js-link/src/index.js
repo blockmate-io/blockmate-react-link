@@ -28,6 +28,8 @@ const TRUSTED_ORIGINS = [
 
 const TAB_ID_SESSION_KEY = 'bm_deposit_id'
 const TAB_ID_PREFIX = 'blockmate'
+const KEY_TIMESTAMP_SUFFIX = '__ts'
+const ONE_DAY_MS = 24 * 60 * 60 * 1000
 
 const OAUTH_QUERY_PARAM = 'oauthConnectedAccount'
 const OAUTH_LOCAL_STORAGE_KEY = 'oauth_connected_account'
@@ -53,19 +55,64 @@ const getTabId = () => {
   }
 }
 
-const getNamespacedKey = (key) => {
-  const tabId = getTabId()
+const getNamespacedKey = (key, tabId) => {
   return tabId ? `${TAB_ID_PREFIX}:${tabId}:${key}` : key
 }
 
-const getLocalStorageItem = (key) =>
-  localStorage.getItem(getNamespacedKey(key))
+const isExpired = (timestampMs) => {
+  return Number.isFinite(timestampMs) && Date.now() - timestampMs > ONE_DAY_MS
+}
 
-const setLocalStorageItem = (key, value) =>
-  localStorage.setItem(getNamespacedKey(key), value)
+const getLocalStorageItem = (key) => {
+  const tabId = getTabId()
+  const storageKey = getNamespacedKey(key, tabId)
+  return localStorage.getItem(storageKey)
+}
 
-const removeLocalStorageItem = (key) =>
-  localStorage.removeItem(getNamespacedKey(key))
+const setLocalStorageItem = (key, value) => {
+  const tabId = getTabId()
+  const storageKey = getNamespacedKey(key, tabId)
+  localStorage.setItem(storageKey, value)
+  if (tabId) {
+    localStorage.setItem(
+      `${storageKey}${KEY_TIMESTAMP_SUFFIX}`,
+      String(Date.now())
+    )
+  }
+}
+
+const removeLocalStorageItem = (key) => {
+  const tabId = getTabId()
+  const storageKey = getNamespacedKey(key, tabId)
+  localStorage.removeItem(storageKey)
+  if (tabId) {
+    localStorage.removeItem(`${storageKey}${KEY_TIMESTAMP_SUFFIX}`)
+  }
+}
+
+const cleanupExpiredStorageKeys = () => {
+  try {
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i)
+      if (!key) {
+        continue
+      }
+      if (
+        key.startsWith(`${TAB_ID_PREFIX}:`) &&
+        key.endsWith(KEY_TIMESTAMP_SUFFIX)
+      ) {
+        const timestampValue = Number(localStorage.getItem(key))
+        if (isExpired(timestampValue)) {
+          const baseKey = key.slice(0, -KEY_TIMESTAMP_SUFFIX.length)
+          localStorage.removeItem(baseKey)  // Main data key
+          localStorage.removeItem(key)  // Timestamp key
+        }
+      }
+    }
+  } catch (error) {
+    // no-op
+  }
+}
 
 export const handleOpen = (
   message = '',
@@ -76,6 +123,7 @@ export const handleOpen = (
   if (!Object.keys(EVENT_MESSAGES).includes(message)) {
     message = 'linkConnect'
   }
+  cleanupExpiredStorageKeys()
   if (extraUrlParams?.depositId) {
     sessionStorage.setItem(TAB_ID_SESSION_KEY, extraUrlParams.depositId)
   }
