@@ -121,6 +121,15 @@ document.getElementById("open-button").addEventListener("click", () => {
 });
 ```
 
+## For maintainers
+Releasing js-link package:
+`npm version patch -w js-link`
+`npm publish -w js-link --access public`
+
+Releasing react-wrapper package:
+`npm version patch -w react-wrapper`
+`npm publish -w react-wrapper --access public`
+
 ## License
 
 MIT © blockmate-io
