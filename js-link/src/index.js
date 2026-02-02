@@ -29,7 +29,7 @@ const TRUSTED_ORIGINS = [
 const TAB_ID_SESSION_KEY = 'bm_deposit_id'
 const TAB_ID_PREFIX = 'blockmate'
 const KEY_TIMESTAMP_SUFFIX = '__ts'
-const ONE_DAY_MS = 24 * 60 * 60 * 1000
+const MAX_STORED_DEPOSITS = 4
 
 const OAUTH_QUERY_PARAM = 'oauthConnectedAccount'
 const OAUTH_LOCAL_STORAGE_KEY = 'oauth_connected_account'
@@ -59,10 +59,6 @@ const getNamespacedKey = (key, tabId) => {
   return tabId ? `${TAB_ID_PREFIX}:${tabId}:${key}` : key
 }
 
-const isExpired = (timestampMs) => {
-  return Number.isFinite(timestampMs) && Date.now() - timestampMs > ONE_DAY_MS
-}
-
 const getLocalStorageItem = (key) => {
   const tabId = getTabId()
   const storageKey = getNamespacedKey(key, tabId)
@@ -90,23 +86,45 @@ const removeLocalStorageItem = (key) => {
   }
 }
 
-const cleanupExpiredStorageKeys = () => {
+const cleanupOldDepositStorageKeys = () => {
   try {
-    for (let i = localStorage.length - 1; i >= 0; i--) {
+    const namespacedPrefix = `${TAB_ID_PREFIX}:`
+    const depositTimestamps = {}
+
+    for (let i = 0; i < localStorage.length; i += 1) {
       const key = localStorage.key(i)
       if (!key) {
         continue
       }
       if (
-        key.startsWith(`${TAB_ID_PREFIX}:`) &&
+        key.startsWith(namespacedPrefix) &&
         key.endsWith(KEY_TIMESTAMP_SUFFIX)
       ) {
+        const depositId = key.slice(namespacedPrefix.length).split(':')[0]
         const timestampValue = Number(localStorage.getItem(key))
-        if (isExpired(timestampValue)) {
-          const baseKey = key.slice(0, -KEY_TIMESTAMP_SUFFIX.length)
-          localStorage.removeItem(baseKey)  // Main data key
-          localStorage.removeItem(key)  // Timestamp key
+        if (Number.isFinite(timestampValue)) {
+          depositTimestamps[depositId] = Math.max(
+            depositTimestamps[depositId] || 0,
+            timestampValue
+          )
         }
+      }
+    }
+
+    const newestDepositIds = Object.entries(depositTimestamps)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, MAX_STORED_DEPOSITS)
+      .map(([depositId]) => depositId)
+    const newestDepositSet = new Set(newestDepositIds)
+
+    for (let i = localStorage.length - 1; i >= 0; i -= 1) {
+      const key = localStorage.key(i)
+      if (!key || !key.startsWith(namespacedPrefix)) {
+        continue
+      }
+      const depositId = key.slice(namespacedPrefix.length).split(':')[0]
+      if (!newestDepositSet.has(depositId)) {
+        localStorage.removeItem(key)
       }
     }
   } catch (error) {
@@ -123,7 +141,7 @@ export const handleOpen = (
   if (!Object.keys(EVENT_MESSAGES).includes(message)) {
     message = 'linkConnect'
   }
-  cleanupExpiredStorageKeys()
+  cleanupOldDepositStorageKeys()
   if (extraUrlParams?.depositId) {
     sessionStorage.setItem(TAB_ID_SESSION_KEY, extraUrlParams.depositId)
   }

@@ -1842,7 +1842,7 @@ var TRUSTED_ORIGINS = [
 var TAB_ID_SESSION_KEY = "bm_deposit_id";
 var TAB_ID_PREFIX = "blockmate";
 var KEY_TIMESTAMP_SUFFIX = "__ts";
-var ONE_DAY_MS = 24 * 60 * 60 * 1e3;
+var MAX_STORED_DEPOSITS = 4;
 var OAUTH_QUERY_PARAM = "oauthConnectedAccount";
 var OAUTH_LOCAL_STORAGE_KEY = "oauth_connected_account";
 var DEPOSIT_OAUTH_SUCCESS_STEP = "oauth_success";
@@ -1868,9 +1868,6 @@ var getTabId = () => {
 var getNamespacedKey = (key, tabId) => {
   return tabId ? `${TAB_ID_PREFIX}:${tabId}:${key}` : key;
 };
-var isExpired = (timestampMs) => {
-  return Number.isFinite(timestampMs) && Date.now() - timestampMs > ONE_DAY_MS;
-};
 var getLocalStorageItem = (key) => {
   const tabId = getTabId();
   const storageKey = getNamespacedKey(key, tabId);
@@ -1895,20 +1892,36 @@ var removeLocalStorageItem = (key) => {
     localStorage.removeItem(`${storageKey}${KEY_TIMESTAMP_SUFFIX}`);
   }
 };
-var cleanupExpiredStorageKeys = () => {
+var cleanupOldDepositStorageKeys = () => {
   try {
-    for (let i = localStorage.length - 1; i >= 0; i--) {
+    const namespacedPrefix = `${TAB_ID_PREFIX}:`;
+    const depositTimestamps = {};
+    for (let i = 0; i < localStorage.length; i += 1) {
       const key = localStorage.key(i);
       if (!key) {
         continue;
       }
-      if (key.startsWith(`${TAB_ID_PREFIX}:`) && key.endsWith(KEY_TIMESTAMP_SUFFIX)) {
+      if (key.startsWith(namespacedPrefix) && key.endsWith(KEY_TIMESTAMP_SUFFIX)) {
+        const depositId = key.slice(namespacedPrefix.length).split(":")[0];
         const timestampValue = Number(localStorage.getItem(key));
-        if (isExpired(timestampValue)) {
-          const baseKey = key.slice(0, -KEY_TIMESTAMP_SUFFIX.length);
-          localStorage.removeItem(baseKey);
-          localStorage.removeItem(key);
+        if (Number.isFinite(timestampValue)) {
+          depositTimestamps[depositId] = Math.max(
+            depositTimestamps[depositId] || 0,
+            timestampValue
+          );
         }
+      }
+    }
+    const newestDepositIds = Object.entries(depositTimestamps).sort((a, b) => b[1] - a[1]).slice(0, MAX_STORED_DEPOSITS).map(([depositId]) => depositId);
+    const newestDepositSet = new Set(newestDepositIds);
+    for (let i = localStorage.length - 1; i >= 0; i -= 1) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith(namespacedPrefix)) {
+        continue;
+      }
+      const depositId = key.slice(namespacedPrefix.length).split(":")[0];
+      if (!newestDepositSet.has(depositId)) {
+        localStorage.removeItem(key);
       }
     }
   } catch (error) {
@@ -1918,7 +1931,7 @@ var handleOpen = (message = "", accountId, oauthConnectedAccount, extraUrlParams
   if (!Object.keys(EVENT_MESSAGES).includes(message)) {
     message = "linkConnect";
   }
-  cleanupExpiredStorageKeys();
+  cleanupOldDepositStorageKeys();
   if (extraUrlParams?.depositId) {
     sessionStorage.setItem(TAB_ID_SESSION_KEY, extraUrlParams.depositId);
   }
