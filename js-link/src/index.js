@@ -197,17 +197,9 @@ export const createLinkModal = ({
   const emitCloseEvent = (event) => {
     let operationId
     try {
-      const eventUrl = event?.data?.url
-      if (eventUrl) {
-        operationId = new URL(eventUrl, window.location.origin).searchParams.get(
-          DEPOSIT_ID_PARAM
-        )
-      }
-      if (!operationId) {
-        operationId = new URL(window.location.href).searchParams.get(
-          DEPOSIT_ID_PARAM
-        )
-      }
+      operationId = new URL(window.location.href).searchParams.get(
+        DEPOSIT_ID_PARAM
+      )
     } catch (error) {
       operationId = undefined
     }
