@@ -41,6 +41,7 @@ const DEPOSIT_ERROR_STORAGE_KEY = 'deposit_error'
 const DEPOSIT_JWT_LOCAL_STORAGE_KEY = 'deposit_jwt'
 const DEPOSIT_LANG_LOCAL_STORAGE_KEY = 'deposit_lang'
 const MODAL_TYPE_LOCAL_STORAGE_KEY = 'modal_type'
+export const BLOCKMATE_CLOSE_EVENT_NAME = 'blockmate:close'
 
 const getTabId = () => {
   try {
@@ -193,6 +194,30 @@ export const createLinkModal = ({
   additionalUrlParams = null,
   pollingTimeoutMs = 1000
 }) => {
+  const emitCloseEvent = (event) => {
+    const detail = {
+      endResult: event?.data?.endResult,
+      url: event?.data?.url,
+      origin: event?.origin
+    }
+
+    try {
+      window.dispatchEvent(
+        new CustomEvent(BLOCKMATE_CLOSE_EVENT_NAME, { detail })
+      )
+    } catch (error) {
+      // Support older browsers that do not implement the CustomEvent constructor.
+      const customEvent = document.createEvent('CustomEvent')
+      customEvent.initCustomEvent(
+        BLOCKMATE_CLOSE_EVENT_NAME,
+        false,
+        false,
+        detail
+      )
+      window.dispatchEvent(customEvent)
+    }
+  }
+
   // For oauth
   const startOauthSuccessPolling = () => {
     const oauthPollingInterval = setInterval(() => {
@@ -432,6 +457,7 @@ export const createLinkModal = ({
     if (endResult && cleanupActions[endResult]) {
       cleanupActions[endResult]()
     }
+    emitCloseEvent(event)
   }
 
   startDepositSuccessPolling()
@@ -508,6 +534,7 @@ if (typeof window !== 'undefined') {
     handleRedirect,
     handleCloseRedirect,
     createLinkModal,
-    handleInit
+    handleInit,
+    BLOCKMATE_CLOSE_EVENT_NAME
   }
 }

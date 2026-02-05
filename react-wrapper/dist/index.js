@@ -19,6 +19,7 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 // src/index.js
 var index_exports = {};
 __export(index_exports, {
+  BLOCKMATE_CLOSE_EVENT_NAME: () => import_blockmate_js_link.BLOCKMATE_CLOSE_EVENT_NAME,
   LinkModal: () => LinkModal,
   createLinkModal: () => import_blockmate_js_link.createLinkModal,
   handleClose: () => import_blockmate_js_link.handleClose,

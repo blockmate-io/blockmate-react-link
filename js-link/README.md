@@ -24,8 +24,8 @@ If you want to use this library without a bundler, include the IIFE build from a
   }
   });
 
-  document.getElementById("open-button").addEventListener("click", () => {
-    BlockmateJSLink.handleOpen(
+document.getElementById("open-button").addEventListener("click", () => {
+  BlockmateJSLink.handleOpen(
       "deposit", // Use "deposit" for deposits or "withdrawal" for withdrawals
       undefined,
       undefined,
@@ -33,10 +33,17 @@ If you want to use this library without a bundler, include the IIFE build from a
         depositId: "...",
         jwt: "...", // Optional, overrides jwt provided in createLinkModal
       }
-    );
-  });
+  );
+});
+
+window.addEventListener(BlockmateJSLink.BLOCKMATE_CLOSE_EVENT_NAME, (event) => {
+  const { endResult } = event.detail || {};
+  console.log("Blockmate modal closed", endResult); // "success", "error" or undefined
+});
 </script>
 ```
+
+You can also use a literal event name if needed: `blockmate:close`.
 
 ### Deposits and withdrawals
 If you want to use this library for Blockmate deposit / withdrawal capabilities, follow this guide. For

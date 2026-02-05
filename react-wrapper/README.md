@@ -50,9 +50,18 @@ To open the modal for deposits, use the `handleOpen` function as shown in the fo
 example:
 ```jsx
 import React from "react";
-import { handleOpen, LinkModal } from "@blockmate.io/blockmate-react-link";
+import { handleOpen, LinkModal, BLOCKMATE_CLOSE_EVENT_NAME } from "@blockmate.io/blockmate-react-link";
 
 const YourConnectComponent = () => {
+    React.useEffect(() => {
+      const onClose = (event) => {
+        const { endResult } = event.detail || {};
+        console.log("Blockmate modal closed", endResult); // "success", "error" or undefined
+      };
+      window.addEventListener(BLOCKMATE_CLOSE_EVENT_NAME, onClose);
+      return () => window.removeEventListener(BLOCKMATE_CLOSE_EVENT_NAME, onClose);
+    }, []);
+
     return (
       <>
         <LinkModal

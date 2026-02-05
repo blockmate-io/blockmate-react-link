@@ -4,7 +4,8 @@ import {
   handleClose,
   handleRedirect,
   handleCloseRedirect,
-  handleInit
+  handleInit,
+  BLOCKMATE_CLOSE_EVENT_NAME
 } from '@blockmate.io/blockmate-js-link'
 
 export {
@@ -13,7 +14,8 @@ export {
   handleClose,
   handleRedirect,
   handleCloseRedirect,
-  handleInit
+  handleInit,
+  BLOCKMATE_CLOSE_EVENT_NAME
 }
 
 export const LinkModal = ({

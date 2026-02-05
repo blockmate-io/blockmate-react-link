@@ -1838,6 +1838,7 @@ var DEPOSIT_ERROR_STORAGE_KEY = "deposit_error";
 var DEPOSIT_JWT_LOCAL_STORAGE_KEY = "deposit_jwt";
 var DEPOSIT_LANG_LOCAL_STORAGE_KEY = "deposit_lang";
 var MODAL_TYPE_LOCAL_STORAGE_KEY = "modal_type";
+var BLOCKMATE_CLOSE_EVENT_NAME = "blockmate:close";
 var getTabId = () => {
   try {
     const params = new URLSearchParams(window.location.search);
@@ -1963,6 +1964,27 @@ var createLinkModal = ({
   additionalUrlParams = null,
   pollingTimeoutMs = 1e3
 }) => {
+  const emitCloseEvent = (event) => {
+    const detail = {
+      endResult: event?.data?.endResult,
+      url: event?.data?.url,
+      origin: event?.origin
+    };
+    try {
+      window.dispatchEvent(
+        new CustomEvent(BLOCKMATE_CLOSE_EVENT_NAME, { detail })
+      );
+    } catch (error) {
+      const customEvent = document.createEvent("CustomEvent");
+      customEvent.initCustomEvent(
+        BLOCKMATE_CLOSE_EVENT_NAME,
+        false,
+        false,
+        detail
+      );
+      window.dispatchEvent(customEvent);
+    }
+  };
   const startOauthSuccessPolling = () => {
     const oauthPollingInterval = setInterval(() => {
       const params = new URLSearchParams(window.location.search);
@@ -2157,6 +2179,7 @@ var createLinkModal = ({
     if (endResult && cleanupActions[endResult]) {
       cleanupActions[endResult]();
     }
+    emitCloseEvent(event);
   };
   startDepositSuccessPolling();
   startOauthSuccessPolling();
@@ -2224,10 +2247,12 @@ if (typeof window !== "undefined") {
     handleRedirect,
     handleCloseRedirect,
     createLinkModal,
-    handleInit
+    handleInit,
+    BLOCKMATE_CLOSE_EVENT_NAME
   };
 }
 export {
+  BLOCKMATE_CLOSE_EVENT_NAME,
   createLinkModal,
   handleClose,
   handleCloseRedirect,
