@@ -1,6 +1,6 @@
 {
   "name": "@blockmate.io/blockmate-js-link",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Core (vanilla JS) package for Blockmate Link",
   "author": "blockmate-io",
   "license": "MIT",
