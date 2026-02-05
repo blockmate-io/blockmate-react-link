@@ -1945,8 +1945,16 @@ var handleOpen = (message = "", accountId, oauthConnectedAccount, extraUrlParams
     "*"
   );
 };
-var handleClose = (endResult) => {
-  window.parent.postMessage({ type: "close", endResult }, "*");
+var handleClose = (closePayload) => {
+  let endResult;
+  let operationId;
+  if (closePayload && typeof closePayload === "object") {
+    endResult = closePayload.endResult;
+    operationId = closePayload.operationId;
+  } else {
+    endResult = closePayload;
+  }
+  window.parent.postMessage({ type: "close", endResult, operationId }, "*");
 };
 var handleRedirect = (targetUrl, inNewTab = false) => {
   window.parent.postMessage({ type: "redirect", targetUrl, inNewTab }, "*");
@@ -1965,14 +1973,7 @@ var createLinkModal = ({
   pollingTimeoutMs = 1e3
 }) => {
   const emitCloseEvent = (event) => {
-    let operationId;
-    try {
-      operationId = new URL(window.location.href).searchParams.get(
-        DEPOSIT_ID_PARAM
-      );
-    } catch (error) {
-      operationId = void 0;
-    }
+    const operationId = event?.data?.operationId || void 0;
     const detail = {
       endResult: event?.data?.endResult,
       url: event?.data?.url,

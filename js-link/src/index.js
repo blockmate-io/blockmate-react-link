@@ -171,8 +171,18 @@ export const handleOpen = (
   )
 }
 
-export const handleClose = (endResult) => {
-  window.parent.postMessage({ type: 'close', endResult }, '*')
+export const handleClose = (closePayload) => {
+  let endResult
+  let operationId
+
+  if (closePayload && typeof closePayload === 'object') {
+    endResult = closePayload.endResult
+    operationId = closePayload.operationId
+  } else {
+    endResult = closePayload
+  }
+
+  window.parent.postMessage({ type: 'close', endResult, operationId }, '*')
 }
 
 export const handleRedirect = (targetUrl, inNewTab = false) => {
@@ -195,14 +205,7 @@ export const createLinkModal = ({
   pollingTimeoutMs = 1000
 }) => {
   const emitCloseEvent = (event) => {
-    let operationId
-    try {
-      operationId = new URL(window.location.href).searchParams.get(
-        DEPOSIT_ID_PARAM
-      )
-    } catch (error) {
-      operationId = undefined
-    }
+    const operationId = event?.data?.operationId || undefined
 
     const detail = {
       endResult: event?.data?.endResult,
