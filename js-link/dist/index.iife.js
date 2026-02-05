@@ -1981,10 +1981,27 @@ var BlockmateJSLink = (() => {
     pollingTimeoutMs = 1e3
   }) => {
     const emitCloseEvent = (event) => {
+      let operationId;
+      try {
+        const eventUrl = event?.data?.url;
+        if (eventUrl) {
+          operationId = new URL(eventUrl, window.location.origin).searchParams.get(
+            DEPOSIT_ID_PARAM
+          );
+        }
+        if (!operationId) {
+          operationId = new URL(window.location.href).searchParams.get(
+            DEPOSIT_ID_PARAM
+          );
+        }
+      } catch (error) {
+        operationId = void 0;
+      }
       const detail = {
         endResult: event?.data?.endResult,
         url: event?.data?.url,
-        origin: event?.origin
+        origin: event?.origin,
+        operation_id: operationId || void 0
       };
       try {
         window.dispatchEvent(
