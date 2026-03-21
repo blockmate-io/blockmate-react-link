@@ -31,8 +31,10 @@ npm --workspace react-wrapper run build
 
 Publish from each package folder:
 ```bash
+npm version patch -w js-link
+npm version patch -w react-wrapper
 cd js-link && npm publish
-cd ../react-wrapper && npm publish
+cd react-wrapper && npm publish
 ```
 
 ## License
