@@ -1,6 +1,8 @@
-// src/index.js
+// src/index.tsx
+import { useEffect } from "react";
 import {
   createLinkModal,
+  destroyLinkModal,
   handleOpen,
   handleClose,
   handleRedirect,
@@ -15,13 +17,25 @@ var LinkModal = ({
   additionalUrlParams = null,
   pollingTimeoutMs = 1e3
 }) => {
-  createLinkModal({ jwt, url, cleanupActions, additionalUrlParams, pollingTimeoutMs });
+  useEffect(() => {
+    createLinkModal({
+      jwt,
+      url,
+      cleanupActions,
+      additionalUrlParams,
+      pollingTimeoutMs
+    });
+    return () => {
+      destroyLinkModal();
+    };
+  }, [jwt, url, cleanupActions, additionalUrlParams, pollingTimeoutMs]);
   return null;
 };
 export {
   BLOCKMATE_CLOSE_EVENT_NAME,
   LinkModal,
   createLinkModal,
+  destroyLinkModal,
   handleClose,
   handleCloseRedirect,
   handleInit,

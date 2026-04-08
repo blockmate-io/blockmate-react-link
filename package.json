@@ -16,7 +16,11 @@
     "build": "npm -ws run build",
     "start": "npm -ws run start",
     "prepare": "npm -ws run prepare",
-    "test": "npm -ws run test"
+    "test": "npm -ws run test",
+    "typecheck": "npm -ws run typecheck"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
   },
   "bugs": {
     "url": "https://github.com/blockmate-io/blockmate-react-link/issues"

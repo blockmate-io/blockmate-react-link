@@ -1,7 +1,48 @@
-/* eslint-disable */
 import { Buffer } from 'buffer'
 
-window.Buffer = window.Buffer || Buffer
+type LinkQueryValue = string | number | boolean
+
+export interface LinkExtraUrlParams
+  extends Record<string, LinkQueryValue | null | undefined> {
+  depositId?: string
+  jwt?: string
+  lang?: string
+}
+
+export interface LinkClosePayload {
+  endResult?: string
+  operationId?: string | number
+}
+
+export interface BlockmateCloseEventDetail {
+  endResult?: string
+  url?: string
+  origin?: string
+  operation_id?: string | number
+}
+
+export type LinkCleanupAction = () => void
+export type LinkCleanupActions = Partial<Record<string, LinkCleanupAction>>
+
+export interface CreateLinkModalOptions {
+  jwt?: string
+  url?: string
+  cleanupActions?: LinkCleanupActions
+  additionalUrlParams?: LinkExtraUrlParams | null
+  pollingTimeoutMs?: number
+}
+
+type BlockmateMessageData = {
+  type?: string
+  accountId?: string
+  oauthConnectedAccount?: string
+  extraUrlParams?: LinkExtraUrlParams
+  endResult?: string
+  operationId?: string | number
+  inNewTab?: boolean
+  targetUrl?: string
+  url?: string
+}
 
 const EVENT_MESSAGES = {
   linkConnect: ``,
@@ -17,7 +58,42 @@ const EVENT_MESSAGES = {
   deposit: 'deposit-exchange',
   directDeposit: 'deposit-wallet-connect',
   withdrawal: 'withdrawal-exchange',
+} as const
+
+export type LinkMessageType = keyof typeof EVENT_MESSAGES
+type IncomingMessageType = LinkMessageType | 'init'
+
+export interface BlockmateLinkGlobal {
+  handleOpen: typeof handleOpen
+  handleClose: typeof handleClose
+  handleRedirect: typeof handleRedirect
+  handleCloseRedirect: typeof handleCloseRedirect
+  createLinkModal: typeof createLinkModal
+  destroyLinkModal: typeof destroyLinkModal
+  handleInit: typeof handleInit
+  BLOCKMATE_CLOSE_EVENT_NAME: typeof BLOCKMATE_CLOSE_EVENT_NAME
 }
+
+interface BlockmateLinkRuntime {
+  depositSuccessIntervalId: number | null
+  localStorageIntervalId: number | null
+  oauthSuccessIntervalId: number | null
+}
+
+type RuntimeWindow = Window &
+  typeof globalThis & {
+    Buffer?: typeof Buffer
+    __blockmateLinkRuntime?: BlockmateLinkRuntime
+  }
+
+declare global {
+  interface Window {
+    BlockmateLink?: BlockmateLinkGlobal
+  }
+}
+
+const runtimeWindow = window as RuntimeWindow
+runtimeWindow.Buffer = runtimeWindow.Buffer || Buffer
 
 const TRUSTED_ORIGINS = [
   'https://link.blockmate.io',
@@ -42,8 +118,21 @@ const DEPOSIT_JWT_LOCAL_STORAGE_KEY = 'deposit_jwt'
 const DEPOSIT_LANG_LOCAL_STORAGE_KEY = 'deposit_lang'
 const MODAL_TYPE_LOCAL_STORAGE_KEY = 'modal_type'
 export const BLOCKMATE_CLOSE_EVENT_NAME = 'blockmate:close'
+const LINK_IFRAME_ID = 'link-iframe'
+const SPINNER_ID = 'iframe-loading-spinner'
 
-const getTabId = () => {
+const hasOwn = <T extends object>(
+  object: T,
+  key: PropertyKey
+): key is keyof T => Object.prototype.hasOwnProperty.call(object, key)
+
+const isLinkMessageType = (value: unknown): value is LinkMessageType =>
+  typeof value === 'string' && hasOwn(EVENT_MESSAGES, value)
+
+const isIncomingMessageType = (value: unknown): value is IncomingMessageType =>
+  value === 'init' || isLinkMessageType(value)
+
+const getTabId = (): string | null => {
   try {
     const params = new URLSearchParams(window.location.search)
     const depositId = params.get(DEPOSIT_ID_PARAM)
@@ -56,17 +145,17 @@ const getTabId = () => {
   }
 }
 
-const getNamespacedKey = (key, tabId) => {
+const getNamespacedKey = (key: string, tabId: string | null): string => {
   return tabId ? `${TAB_ID_PREFIX}:${tabId}:${key}` : key
 }
 
-const getLocalStorageItem = (key) => {
+const getLocalStorageItem = (key: string): string | null => {
   const tabId = getTabId()
   const storageKey = getNamespacedKey(key, tabId)
   return localStorage.getItem(storageKey)
 }
 
-const setLocalStorageItem = (key, value) => {
+const setLocalStorageItem = (key: string, value: string): void => {
   const tabId = getTabId()
   const storageKey = getNamespacedKey(key, tabId)
   localStorage.setItem(storageKey, value)
@@ -78,7 +167,7 @@ const setLocalStorageItem = (key, value) => {
   }
 }
 
-const removeLocalStorageItem = (key) => {
+const removeLocalStorageItem = (key: string): void => {
   const tabId = getTabId()
   const storageKey = getNamespacedKey(key, tabId)
   localStorage.removeItem(storageKey)
@@ -87,10 +176,10 @@ const removeLocalStorageItem = (key) => {
   }
 }
 
-const cleanupOldDepositStorageKeys = () => {
+const cleanupOldDepositStorageKeys = (): void => {
   try {
     const namespacedPrefix = `${TAB_ID_PREFIX}:`
-    const depositTimestamps = {}
+    const depositTimestamps: Record<string, number> = {}
 
     for (let i = 0; i < localStorage.length; i += 1) {
       const key = localStorage.key(i)
@@ -133,13 +222,52 @@ const cleanupOldDepositStorageKeys = () => {
   }
 }
 
+const getRuntime = (): BlockmateLinkRuntime => {
+  if (!runtimeWindow.__blockmateLinkRuntime) {
+    runtimeWindow.__blockmateLinkRuntime = {
+      depositSuccessIntervalId: null,
+      localStorageIntervalId: null,
+      oauthSuccessIntervalId: null
+    }
+  }
+
+  return runtimeWindow.__blockmateLinkRuntime
+}
+
+export const destroyLinkModal = (): void => {
+  const runtime = getRuntime()
+
+  if (runtime.depositSuccessIntervalId !== null) {
+    window.clearInterval(runtime.depositSuccessIntervalId)
+    runtime.depositSuccessIntervalId = null
+  }
+  if (runtime.oauthSuccessIntervalId !== null) {
+    window.clearInterval(runtime.oauthSuccessIntervalId)
+    runtime.oauthSuccessIntervalId = null
+  }
+  if (runtime.localStorageIntervalId !== null) {
+    window.clearInterval(runtime.localStorageIntervalId)
+    runtime.localStorageIntervalId = null
+  }
+
+  if (window.onmessage) {
+    window.onmessage = null
+  }
+
+  const iframe = document.getElementById(LINK_IFRAME_ID)
+  iframe?.remove()
+
+  const spinner = document.getElementById(SPINNER_ID)
+  spinner?.remove()
+}
+
 export const handleOpen = (
-  message = '',
-  accountId,
-  oauthConnectedAccount,
-  extraUrlParams
-) => {
-  if (!Object.keys(EVENT_MESSAGES).includes(message)) {
+  message: LinkMessageType | string = 'linkConnect',
+  accountId?: string,
+  oauthConnectedAccount?: string,
+  extraUrlParams?: LinkExtraUrlParams | null
+): void => {
+  if (!isLinkMessageType(message)) {
     message = 'linkConnect'
   }
   cleanupOldDepositStorageKeys()
@@ -156,7 +284,7 @@ export const handleOpen = (
   const mergedExtraUrlParams = {
     ...(extraUrlParams ?? {})
   }
-  if (!Object.hasOwn(mergedExtraUrlParams, 'lang') && storedLang) {
+  if (!hasOwn(mergedExtraUrlParams, 'lang') && storedLang) {
     mergedExtraUrlParams.lang = storedLang
   }
   setLocalStorageItem(MODAL_TYPE_LOCAL_STORAGE_KEY, message)
@@ -171,9 +299,11 @@ export const handleOpen = (
   )
 }
 
-export const handleClose = (closePayload) => {
-  let endResult
-  let operationId
+export const handleClose = (
+  closePayload?: LinkClosePayload | string
+): void => {
+  let endResult: string | undefined
+  let operationId: string | number | undefined
 
   if (closePayload && typeof closePayload === 'object') {
     endResult = closePayload.endResult
@@ -185,15 +315,18 @@ export const handleClose = (closePayload) => {
   window.parent.postMessage({ type: 'close', endResult, operationId }, '*')
 }
 
-export const handleRedirect = (targetUrl, inNewTab = false) => {
+export const handleRedirect = (
+  targetUrl: string,
+  inNewTab = false
+): void => {
   window.parent.postMessage({ type: 'redirect', targetUrl, inNewTab }, '*')
 }
 
-export const handleCloseRedirect = () => {
+export const handleCloseRedirect = (): void => {
   window.parent.postMessage({ type: 'redirectClose' }, '*')
 }
 
-export const handleInit = () => {
+export const handleInit = (): void => {
   window.parent.postMessage({ type: 'init' }, '*')
 }
 
@@ -203,11 +336,19 @@ export const createLinkModal = ({
   cleanupActions = {},
   additionalUrlParams = null,
   pollingTimeoutMs = 1000
-}) => {
-  const emitCloseEvent = (event) => {
+}: CreateLinkModalOptions): void => {
+  const body = document.body
+  if (!body) {
+    return
+  }
+  const runtime = getRuntime()
+
+  destroyLinkModal()
+
+  const emitCloseEvent = (event: MessageEvent<BlockmateMessageData>): void => {
     const operationId = event?.data?.operationId || undefined
 
-    const detail = {
+    const detail: BlockmateCloseEventDetail = {
       endResult: event?.data?.endResult,
       url: event?.data?.url,
       origin: event?.origin,
@@ -216,11 +357,14 @@ export const createLinkModal = ({
 
     try {
       window.dispatchEvent(
-        new CustomEvent(BLOCKMATE_CLOSE_EVENT_NAME, { detail })
+        new CustomEvent<BlockmateCloseEventDetail>(BLOCKMATE_CLOSE_EVENT_NAME, {
+          detail
+        })
       )
     } catch (error) {
       // Support older browsers that do not implement the CustomEvent constructor.
-      const customEvent = document.createEvent('CustomEvent')
+      const customEvent =
+        document.createEvent('CustomEvent') as CustomEvent<BlockmateCloseEventDetail>
       customEvent.initCustomEvent(
         BLOCKMATE_CLOSE_EVENT_NAME,
         false,
@@ -232,8 +376,8 @@ export const createLinkModal = ({
   }
 
   // For oauth
-  const startOauthSuccessPolling = () => {
-    const oauthPollingInterval = setInterval(() => {
+  const startOauthSuccessPolling = (): void => {
+    runtime.oauthSuccessIntervalId = window.setInterval(() => {
       const params = new URLSearchParams(window.location.search)
       const maybeOauthConnectedAccount = params.get(OAUTH_QUERY_PARAM)
       if (maybeOauthConnectedAccount) {
@@ -245,13 +389,13 @@ export const createLinkModal = ({
         //     window.location.pathname
         //   }?${params.toString()}`
         // )
-        window.close();
+        window.close()
       }
     }, pollingTimeoutMs)
   }
 
-  const startDepositSuccessPolling = () => {
-    const depositSuccessPollingInterval = setInterval(() => {
+  const startDepositSuccessPolling = (): void => {
+    runtime.depositSuccessIntervalId = window.setInterval(() => {
       const params = new URLSearchParams(window.location.search)
       const maybeDepositIdParam = params.get(DEPOSIT_ID_PARAM)
       const maybeSuccessParam = String(
@@ -267,7 +411,7 @@ export const createLinkModal = ({
         setLocalStorageItem(DEPOSIT_ERROR_STORAGE_KEY, 'success')
       } else if (maybeSuccessParam === 'false') {
         const detailParam = params.get('detail')
-        setLocalStorageItem(DEPOSIT_ERROR_STORAGE_KEY, detailParam)
+        setLocalStorageItem(DEPOSIT_ERROR_STORAGE_KEY, String(detailParam))
       }
       params.delete(DEPOSIT_SUCCESS_PARAM)
       params.delete('detail')
@@ -281,8 +425,8 @@ export const createLinkModal = ({
   }
 
   // For oauth
-  const startLocalStoragePolling = () => {
-    const localStoragePollingInterval = setInterval(() => {
+  const startLocalStoragePolling = (): void => {
+    runtime.localStorageIntervalId = window.setInterval(() => {
       const oauthConnectedAccount = getLocalStorageItem(
         OAUTH_LOCAL_STORAGE_KEY
       )
@@ -295,8 +439,11 @@ export const createLinkModal = ({
       )
       const modalType = getLocalStorageItem(MODAL_TYPE_LOCAL_STORAGE_KEY)
       if (depositErrorParamDeletedAlready && typeof depositError === 'string') {
+        const eventPath = isLinkMessageType(modalType)
+          ? EVENT_MESSAGES[modalType]
+          : ''
         createIframe(
-          new URL(EVENT_MESSAGES?.[modalType] ?? '', url).href,
+          new URL(eventPath, url).href,
           undefined,
           undefined,
           undefined,
@@ -304,7 +451,7 @@ export const createLinkModal = ({
         )
         removeLocalStorageItem(DEPOSIT_ERROR_STORAGE_KEY)
       } else if (oauthConnectedAccount && oauthQueryParamDeletedAlready) {
-        let path = EVENT_MESSAGES.linkConnect
+        let path: string = EVENT_MESSAGES.linkConnect
         let step
         if (getLocalStorageItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY)) {
           if (modalType === 'deposit') {
@@ -332,13 +479,9 @@ export const createLinkModal = ({
     }, pollingTimeoutMs)
   }
 
-  const body = document.querySelector('body')
-
-  const spinnerId = 'iframe-loading-spinner'
-
-  const createSpinner = () => {
+  const createSpinner = (): void => {
     const spinnerWrapper = document.createElement('div')
-    spinnerWrapper.setAttribute('id', spinnerId)
+    spinnerWrapper.setAttribute('id', SPINNER_ID)
     spinnerWrapper.setAttribute(
       'style',
       `
@@ -380,18 +523,17 @@ export const createLinkModal = ({
     'display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0; background-color: rgba(0, 0, 0, 0.55);'
 
   const createIframe = (
-    url,
-    accountId,
-    oauthConnectedAccount,
-    step,
-    depositError,
+    iframeUrl: string,
+    accountId?: string,
+    oauthConnectedAccount?: string,
+    step?: string,
+    depositError?: string,
     includeDefaultJwt = true
-  ) => {
-    const iframeId = 'link-iframe'
-    const existingIframe = document.getElementById(iframeId)
+  ): void => {
+    const existingIframe = document.getElementById(LINK_IFRAME_ID)
     if (!existingIframe) {
-      createSpinner();
-      const iframeUrl = new URL(url)
+      createSpinner()
+      const parsedIframeUrl = new URL(iframeUrl)
       const parentUrl = new URL(window.location.href)
       const tabId = getTabId()
       if (tabId && !parentUrl.searchParams.has(DEPOSIT_ID_PARAM)) {
@@ -404,23 +546,23 @@ export const createLinkModal = ({
         includeDefaultJwt &&
         (jwt || getLocalStorageItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY))
       const storedLang = getLocalStorageItem(DEPOSIT_LANG_LOCAL_STORAGE_KEY)
-      const mergedAdditionalUrlParams = {
+      const mergedAdditionalUrlParams: LinkExtraUrlParams = {
         ...(additionalUrlParams ?? {})
       }
-      if (iframeUrl.searchParams.has('lang')) {
+      if (parsedIframeUrl.searchParams.has('lang')) {
         delete mergedAdditionalUrlParams.lang
       } else if (
-        !Object.hasOwn(mergedAdditionalUrlParams, 'lang') &&
+        !hasOwn(mergedAdditionalUrlParams, 'lang') &&
         storedLang
       ) {
         mergedAdditionalUrlParams.lang = storedLang
       }
       const params = new URLSearchParams(window.location.search)
       const providerNameParam = params.get('providerName')
-      if (tabId && !iframeUrl.searchParams.has(DEPOSIT_ID_PARAM)) {
+      if (tabId && !parsedIframeUrl.searchParams.has(DEPOSIT_ID_PARAM)) {
         mergedAdditionalUrlParams[DEPOSIT_ID_PARAM] = tabId
       }
-      const urlParamsArray = [
+      const urlParamsArray: Array<[string, LinkQueryValue | null | undefined]> = [
         ['jwt', token],
         ['accountId', accountId],
         ['step', step],
@@ -428,16 +570,27 @@ export const createLinkModal = ({
         ['providerName', providerNameParam],
         ['parentUrlEncoded', parentUrlEncoded],
         ...Object.entries(mergedAdditionalUrlParams)
-      ].filter(([_, value]) => value)
+      ]
+      const filteredUrlParamsArray = urlParamsArray.filter(
+        ([, value]) => value !== undefined && value !== null && value !== ''
+      )
       let urlParams = urlParamsArray
-        .map(([key, value]) => `${key}=${value}`)
+        .map(([key, value]) => `${key}=${String(value)}`)
         .join('&')
-      if (url.includes('?')) {
+      if (iframeUrl.includes('?')) {
         urlParams = `&${urlParams}`
       } else if (urlParams.length > 0) {
         urlParams = `?${urlParams}`
       }
-      let urlWithParams = `${url}${urlParams}`
+      urlParams = filteredUrlParamsArray
+        .map(([key, value]) => `${key}=${String(value)}`)
+        .join('&')
+      if (iframeUrl.includes('?')) {
+        urlParams = urlParams.length > 0 ? `&${urlParams}` : ''
+      } else if (urlParams.length > 0) {
+        urlParams = `?${urlParams}`
+      }
+      let urlWithParams = `${iframeUrl}${urlParams}`
       if (oauthConnectedAccount) {
         urlWithParams += `&${OAUTH_QUERY_PARAM}=${oauthConnectedAccount}`
       }
@@ -445,11 +598,11 @@ export const createLinkModal = ({
       const iframe = document.createElement('iframe')
       iframe.setAttribute('src', urlWithParams)
       iframe.setAttribute('style', iframeStyle)
-      iframe.setAttribute('id', iframeId)
+      iframe.setAttribute('id', LINK_IFRAME_ID)
       iframe.setAttribute('allow', 'camera') // For QR-code scanning
 
       iframe.addEventListener('load', () => {
-        const spinner = document.getElementById(spinnerId)
+        const spinner = document.getElementById(SPINNER_ID)
         if (spinner) spinner.remove()
       })
 
@@ -457,13 +610,13 @@ export const createLinkModal = ({
     }
   }
 
-  const removeIframe = (event) => {
-    const iframe = document.querySelector('#link-iframe')
+  const removeIframe = (event: MessageEvent<BlockmateMessageData>): void => {
+    const iframe = document.getElementById(LINK_IFRAME_ID)
     if (iframe) {
-      body.removeChild(iframe)
+      iframe.remove()
     }
     if (event.data.url) {
-      window.location = event.data.url
+      window.location.assign(event.data.url)
     }
 
     const endResult = event?.data?.endResult
@@ -477,45 +630,50 @@ export const createLinkModal = ({
   startOauthSuccessPolling()
   startLocalStoragePolling()
 
-  let redirectWindow = null
+  let redirectWindow: Window | null = null
 
-  window.onmessage = function (event) {
-    if (!Object.hasOwn(EVENT_MESSAGES, event.data.type)) {
+  window.onmessage = function (event: MessageEvent<BlockmateMessageData>) {
+    const eventType = event.data?.type
+    if (!isIncomingMessageType(eventType)) {
       return null
     }
 
     // These actions can only be called from within the iframe, check origin as they can perform redirects of the parent
-    if (['close', 'redirect', 'redirectClose'].includes(event?.data?.type)) {
+    if (['close', 'redirect', 'redirectClose'].includes(eventType)) {
       if (!TRUSTED_ORIGINS.includes(event.origin)) {
         return null
       }
     }
 
-    if (event?.data?.type === 'init') {
-      removeLocalStorageItem(OAUTH_LOCAL_STORAGE_KEY);
-    } else if (event?.data?.type === 'close') {
+    if (eventType === 'init') {
+      removeLocalStorageItem(OAUTH_LOCAL_STORAGE_KEY)
+    } else if (eventType === 'close') {
       if (jwt) {
         setLocalStorageItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt)
       }
       removeIframe(event)
-    } else if (event?.data?.type === 'redirect') {
+    } else if (eventType === 'redirect') {
+      const targetUrl = event.data.targetUrl
+      if (!targetUrl) {
+        return null
+      }
       if (jwt) {
         setLocalStorageItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt)
       }
       if (event.data.inNewTab) {
-        redirectWindow = window.open(event.data.targetUrl, '_blank')
+        redirectWindow = window.open(targetUrl, '_blank')
         if (!redirectWindow) {
           console.error('Redirect blocked by browser popup blocker', {
-            targetUrl: event.data.targetUrl,
+            targetUrl,
             inNewTab: true,
             origin: event.origin
           })
         }
       } else {
         redirectWindow = null
-        window.location.assign(event.data.targetUrl)
+        window.location.assign(targetUrl)
       }
-    } else if (event?.data?.type === 'redirectClose') {
+    } else if (eventType === 'redirectClose') {
       if (redirectWindow && !redirectWindow.closed) {
         redirectWindow.close()
       }
@@ -529,7 +687,7 @@ export const createLinkModal = ({
       }
       const includeDefaultJwt = !event.data.extraUrlParams?.jwt
       createIframe(
-        new URL(`${EVENT_MESSAGES[event.data.type]}${urlParams}`, url).href,
+        new URL(`${EVENT_MESSAGES[eventType]}${urlParams}`, url).href,
         event.data?.accountId,
         event.data?.oauthConnectedAccount,
         undefined,
@@ -547,6 +705,7 @@ if (typeof window !== 'undefined') {
     handleRedirect,
     handleCloseRedirect,
     createLinkModal,
+    destroyLinkModal,
     handleInit,
     BLOCKMATE_CLOSE_EVENT_NAME
   }

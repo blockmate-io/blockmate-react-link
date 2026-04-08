@@ -1,3 +1,4 @@
+"use strict";
 var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -1805,11 +1806,12 @@ var require_buffer = __commonJS({
   }
 });
 
-// src/index.js
+// src/index.ts
 var index_exports = {};
 __export(index_exports, {
   BLOCKMATE_CLOSE_EVENT_NAME: () => BLOCKMATE_CLOSE_EVENT_NAME,
   createLinkModal: () => createLinkModal,
+  destroyLinkModal: () => destroyLinkModal,
   handleClose: () => handleClose,
   handleCloseRedirect: () => handleCloseRedirect,
   handleInit: () => handleInit,
@@ -1818,7 +1820,6 @@ __export(index_exports, {
 });
 module.exports = __toCommonJS(index_exports);
 var import_buffer = __toESM(require_buffer());
-window.Buffer = window.Buffer || import_buffer.Buffer;
 var EVENT_MESSAGES = {
   linkConnect: ``,
   verifyPhone: `verify-phone`,
@@ -1834,6 +1835,8 @@ var EVENT_MESSAGES = {
   directDeposit: "deposit-wallet-connect",
   withdrawal: "withdrawal-exchange"
 };
+var runtimeWindow = window;
+runtimeWindow.Buffer = runtimeWindow.Buffer || import_buffer.Buffer;
 var TRUSTED_ORIGINS = [
   "https://link.blockmate.io",
   "https://link-dev-ovh.blockmate.io",
@@ -1855,6 +1858,11 @@ var DEPOSIT_JWT_LOCAL_STORAGE_KEY = "deposit_jwt";
 var DEPOSIT_LANG_LOCAL_STORAGE_KEY = "deposit_lang";
 var MODAL_TYPE_LOCAL_STORAGE_KEY = "modal_type";
 var BLOCKMATE_CLOSE_EVENT_NAME = "blockmate:close";
+var LINK_IFRAME_ID = "link-iframe";
+var SPINNER_ID = "iframe-loading-spinner";
+var hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
+var isLinkMessageType = (value) => typeof value === "string" && hasOwn(EVENT_MESSAGES, value);
+var isIncomingMessageType = (value) => value === "init" || isLinkMessageType(value);
 var getTabId = () => {
   try {
     const params = new URLSearchParams(window.location.search);
@@ -1929,8 +1937,40 @@ var cleanupOldDepositStorageKeys = () => {
   } catch (error) {
   }
 };
-var handleOpen = (message = "", accountId, oauthConnectedAccount, extraUrlParams) => {
-  if (!Object.keys(EVENT_MESSAGES).includes(message)) {
+var getRuntime = () => {
+  if (!runtimeWindow.__blockmateLinkRuntime) {
+    runtimeWindow.__blockmateLinkRuntime = {
+      depositSuccessIntervalId: null,
+      localStorageIntervalId: null,
+      oauthSuccessIntervalId: null
+    };
+  }
+  return runtimeWindow.__blockmateLinkRuntime;
+};
+var destroyLinkModal = () => {
+  const runtime = getRuntime();
+  if (runtime.depositSuccessIntervalId !== null) {
+    window.clearInterval(runtime.depositSuccessIntervalId);
+    runtime.depositSuccessIntervalId = null;
+  }
+  if (runtime.oauthSuccessIntervalId !== null) {
+    window.clearInterval(runtime.oauthSuccessIntervalId);
+    runtime.oauthSuccessIntervalId = null;
+  }
+  if (runtime.localStorageIntervalId !== null) {
+    window.clearInterval(runtime.localStorageIntervalId);
+    runtime.localStorageIntervalId = null;
+  }
+  if (window.onmessage) {
+    window.onmessage = null;
+  }
+  const iframe = document.getElementById(LINK_IFRAME_ID);
+  iframe?.remove();
+  const spinner = document.getElementById(SPINNER_ID);
+  spinner?.remove();
+};
+var handleOpen = (message = "linkConnect", accountId, oauthConnectedAccount, extraUrlParams) => {
+  if (!isLinkMessageType(message)) {
     message = "linkConnect";
   }
   cleanupOldDepositStorageKeys();
@@ -1947,7 +1987,7 @@ var handleOpen = (message = "", accountId, oauthConnectedAccount, extraUrlParams
   const mergedExtraUrlParams = {
     ...extraUrlParams ?? {}
   };
-  if (!Object.hasOwn(mergedExtraUrlParams, "lang") && storedLang) {
+  if (!hasOwn(mergedExtraUrlParams, "lang") && storedLang) {
     mergedExtraUrlParams.lang = storedLang;
   }
   setLocalStorageItem(MODAL_TYPE_LOCAL_STORAGE_KEY, message);
@@ -1988,6 +2028,12 @@ var createLinkModal = ({
   additionalUrlParams = null,
   pollingTimeoutMs = 1e3
 }) => {
+  const body = document.body;
+  if (!body) {
+    return;
+  }
+  const runtime = getRuntime();
+  destroyLinkModal();
   const emitCloseEvent = (event) => {
     const operationId = event?.data?.operationId || void 0;
     const detail = {
@@ -1998,7 +2044,9 @@ var createLinkModal = ({
     };
     try {
       window.dispatchEvent(
-        new CustomEvent(BLOCKMATE_CLOSE_EVENT_NAME, { detail })
+        new CustomEvent(BLOCKMATE_CLOSE_EVENT_NAME, {
+          detail
+        })
       );
     } catch (error) {
       const customEvent = document.createEvent("CustomEvent");
@@ -2012,7 +2060,7 @@ var createLinkModal = ({
     }
   };
   const startOauthSuccessPolling = () => {
-    const oauthPollingInterval = setInterval(() => {
+    runtime.oauthSuccessIntervalId = window.setInterval(() => {
       const params = new URLSearchParams(window.location.search);
       const maybeOauthConnectedAccount = params.get(OAUTH_QUERY_PARAM);
       if (maybeOauthConnectedAccount) {
@@ -2023,7 +2071,7 @@ var createLinkModal = ({
     }, pollingTimeoutMs);
   };
   const startDepositSuccessPolling = () => {
-    const depositSuccessPollingInterval = setInterval(() => {
+    runtime.depositSuccessIntervalId = window.setInterval(() => {
       const params = new URLSearchParams(window.location.search);
       const maybeDepositIdParam = params.get(DEPOSIT_ID_PARAM);
       const maybeSuccessParam = String(
@@ -2036,7 +2084,7 @@ var createLinkModal = ({
         setLocalStorageItem(DEPOSIT_ERROR_STORAGE_KEY, "success");
       } else if (maybeSuccessParam === "false") {
         const detailParam = params.get("detail");
-        setLocalStorageItem(DEPOSIT_ERROR_STORAGE_KEY, detailParam);
+        setLocalStorageItem(DEPOSIT_ERROR_STORAGE_KEY, String(detailParam));
       }
       params.delete(DEPOSIT_SUCCESS_PARAM);
       params.delete("detail");
@@ -2047,7 +2095,7 @@ var createLinkModal = ({
     }, pollingTimeoutMs);
   };
   const startLocalStoragePolling = () => {
-    const localStoragePollingInterval = setInterval(() => {
+    runtime.localStorageIntervalId = window.setInterval(() => {
       const oauthConnectedAccount = getLocalStorageItem(
         OAUTH_LOCAL_STORAGE_KEY
       );
@@ -2059,8 +2107,9 @@ var createLinkModal = ({
       );
       const modalType = getLocalStorageItem(MODAL_TYPE_LOCAL_STORAGE_KEY);
       if (depositErrorParamDeletedAlready && typeof depositError === "string") {
+        const eventPath = isLinkMessageType(modalType) ? EVENT_MESSAGES[modalType] : "";
         createIframe(
-          new URL(EVENT_MESSAGES?.[modalType] ?? "", url).href,
+          new URL(eventPath, url).href,
           void 0,
           void 0,
           void 0,
@@ -2094,11 +2143,9 @@ var createLinkModal = ({
       }
     }, pollingTimeoutMs);
   };
-  const body = document.querySelector("body");
-  const spinnerId = "iframe-loading-spinner";
   const createSpinner = () => {
     const spinnerWrapper = document.createElement("div");
-    spinnerWrapper.setAttribute("id", spinnerId);
+    spinnerWrapper.setAttribute("id", SPINNER_ID);
     spinnerWrapper.setAttribute(
       "style",
       `
@@ -2133,12 +2180,11 @@ var createLinkModal = ({
     document.head.appendChild(style);
   };
   const iframeStyle = "display:block; position:fixed; width:100%; height:100%; z-index:100; border:none; top:0; right:0; background-color: rgba(0, 0, 0, 0.55);";
-  const createIframe = (url2, accountId, oauthConnectedAccount, step, depositError, includeDefaultJwt = true) => {
-    const iframeId = "link-iframe";
-    const existingIframe = document.getElementById(iframeId);
+  const createIframe = (iframeUrl, accountId, oauthConnectedAccount, step, depositError, includeDefaultJwt = true) => {
+    const existingIframe = document.getElementById(LINK_IFRAME_ID);
     if (!existingIframe) {
       createSpinner();
-      const iframeUrl = new URL(url2);
+      const parsedIframeUrl = new URL(iframeUrl);
       const parentUrl = new URL(window.location.href);
       const tabId = getTabId();
       if (tabId && !parentUrl.searchParams.has(DEPOSIT_ID_PARAM)) {
@@ -2152,14 +2198,14 @@ var createLinkModal = ({
       const mergedAdditionalUrlParams = {
         ...additionalUrlParams ?? {}
       };
-      if (iframeUrl.searchParams.has("lang")) {
+      if (parsedIframeUrl.searchParams.has("lang")) {
         delete mergedAdditionalUrlParams.lang;
-      } else if (!Object.hasOwn(mergedAdditionalUrlParams, "lang") && storedLang) {
+      } else if (!hasOwn(mergedAdditionalUrlParams, "lang") && storedLang) {
         mergedAdditionalUrlParams.lang = storedLang;
       }
       const params = new URLSearchParams(window.location.search);
       const providerNameParam = params.get("providerName");
-      if (tabId && !iframeUrl.searchParams.has(DEPOSIT_ID_PARAM)) {
+      if (tabId && !parsedIframeUrl.searchParams.has(DEPOSIT_ID_PARAM)) {
         mergedAdditionalUrlParams[DEPOSIT_ID_PARAM] = tabId;
       }
       const urlParamsArray = [
@@ -2170,36 +2216,45 @@ var createLinkModal = ({
         ["providerName", providerNameParam],
         ["parentUrlEncoded", parentUrlEncoded],
         ...Object.entries(mergedAdditionalUrlParams)
-      ].filter(([_, value]) => value);
-      let urlParams = urlParamsArray.map(([key, value]) => `${key}=${value}`).join("&");
-      if (url2.includes("?")) {
+      ];
+      const filteredUrlParamsArray = urlParamsArray.filter(
+        ([, value]) => value !== void 0 && value !== null && value !== ""
+      );
+      let urlParams = urlParamsArray.map(([key, value]) => `${key}=${String(value)}`).join("&");
+      if (iframeUrl.includes("?")) {
         urlParams = `&${urlParams}`;
       } else if (urlParams.length > 0) {
         urlParams = `?${urlParams}`;
       }
-      let urlWithParams = `${url2}${urlParams}`;
+      urlParams = filteredUrlParamsArray.map(([key, value]) => `${key}=${String(value)}`).join("&");
+      if (iframeUrl.includes("?")) {
+        urlParams = urlParams.length > 0 ? `&${urlParams}` : "";
+      } else if (urlParams.length > 0) {
+        urlParams = `?${urlParams}`;
+      }
+      let urlWithParams = `${iframeUrl}${urlParams}`;
       if (oauthConnectedAccount) {
         urlWithParams += `&${OAUTH_QUERY_PARAM}=${oauthConnectedAccount}`;
       }
       const iframe = document.createElement("iframe");
       iframe.setAttribute("src", urlWithParams);
       iframe.setAttribute("style", iframeStyle);
-      iframe.setAttribute("id", iframeId);
+      iframe.setAttribute("id", LINK_IFRAME_ID);
       iframe.setAttribute("allow", "camera");
       iframe.addEventListener("load", () => {
-        const spinner = document.getElementById(spinnerId);
+        const spinner = document.getElementById(SPINNER_ID);
         if (spinner) spinner.remove();
       });
       body.appendChild(iframe);
     }
   };
   const removeIframe = (event) => {
-    const iframe = document.querySelector("#link-iframe");
+    const iframe = document.getElementById(LINK_IFRAME_ID);
     if (iframe) {
-      body.removeChild(iframe);
+      iframe.remove();
     }
     if (event.data.url) {
-      window.location = event.data.url;
+      window.location.assign(event.data.url);
     }
     const endResult = event?.data?.endResult;
     if (endResult && cleanupActions[endResult]) {
@@ -2212,39 +2267,44 @@ var createLinkModal = ({
   startLocalStoragePolling();
   let redirectWindow = null;
   window.onmessage = function(event) {
-    if (!Object.hasOwn(EVENT_MESSAGES, event.data.type)) {
+    const eventType = event.data?.type;
+    if (!isIncomingMessageType(eventType)) {
       return null;
     }
-    if (["close", "redirect", "redirectClose"].includes(event?.data?.type)) {
+    if (["close", "redirect", "redirectClose"].includes(eventType)) {
       if (!TRUSTED_ORIGINS.includes(event.origin)) {
         return null;
       }
     }
-    if (event?.data?.type === "init") {
+    if (eventType === "init") {
       removeLocalStorageItem(OAUTH_LOCAL_STORAGE_KEY);
-    } else if (event?.data?.type === "close") {
+    } else if (eventType === "close") {
       if (jwt) {
         setLocalStorageItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
       }
       removeIframe(event);
-    } else if (event?.data?.type === "redirect") {
+    } else if (eventType === "redirect") {
+      const targetUrl = event.data.targetUrl;
+      if (!targetUrl) {
+        return null;
+      }
       if (jwt) {
         setLocalStorageItem(DEPOSIT_JWT_LOCAL_STORAGE_KEY, jwt);
       }
       if (event.data.inNewTab) {
-        redirectWindow = window.open(event.data.targetUrl, "_blank");
+        redirectWindow = window.open(targetUrl, "_blank");
         if (!redirectWindow) {
           console.error("Redirect blocked by browser popup blocker", {
-            targetUrl: event.data.targetUrl,
+            targetUrl,
             inNewTab: true,
             origin: event.origin
           });
         }
       } else {
         redirectWindow = null;
-        window.location.assign(event.data.targetUrl);
+        window.location.assign(targetUrl);
       }
-    } else if (event?.data?.type === "redirectClose") {
+    } else if (eventType === "redirectClose") {
       if (redirectWindow && !redirectWindow.closed) {
         redirectWindow.close();
       }
@@ -2256,7 +2316,7 @@ var createLinkModal = ({
       }
       const includeDefaultJwt = !event.data.extraUrlParams?.jwt;
       createIframe(
-        new URL(`${EVENT_MESSAGES[event.data.type]}${urlParams}`, url).href,
+        new URL(`${EVENT_MESSAGES[eventType]}${urlParams}`, url).href,
         event.data?.accountId,
         event.data?.oauthConnectedAccount,
         void 0,
@@ -2273,6 +2333,7 @@ if (typeof window !== "undefined") {
     handleRedirect,
     handleCloseRedirect,
     createLinkModal,
+    destroyLinkModal,
     handleInit,
     BLOCKMATE_CLOSE_EVENT_NAME
   };

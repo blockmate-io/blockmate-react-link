@@ -1,6 +1,6 @@
 {
   "name": "@blockmate.io/blockmate-js-link",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "Core (vanilla JS) package for Blockmate Link",
   "author": "blockmate-io",
   "license": "MIT",
@@ -10,21 +10,24 @@
   },
   "main": "dist/index.js",
   "module": "dist/index.modern.mjs",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.modern.mjs",
       "require": "./dist/index.js",
       "default": "./dist/index.modern.mjs"
     }
   },
-  "source": "src/index.js",
+  "source": "src/index.ts",
   "engines": {
     "node": ">=10"
   },
   "scripts": {
-    "build": "esbuild src/index.js --bundle --format=cjs --outfile=dist/index.js --platform=browser && esbuild src/index.js --bundle --format=esm --outfile=dist/index.modern.mjs --platform=browser && esbuild src/index.js --bundle --format=iife --global-name=BlockmateJSLink --outfile=dist/index.iife.js --platform=browser",
+    "build": "tsc -p tsconfig.json && esbuild src/index.ts --bundle --format=cjs --outfile=dist/index.js --platform=browser && esbuild src/index.ts --bundle --format=esm --outfile=dist/index.modern.mjs --platform=browser && esbuild src/index.ts --bundle --format=iife --global-name=BlockmateJSLink --outfile=dist/index.iife.js --platform=browser",
     "start": "npm run build",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
     "esbuild": "^0.27.2"

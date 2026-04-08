@@ -10,29 +10,33 @@
   },
   "main": "dist/index.js",
   "module": "dist/index.modern.mjs",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.modern.mjs",
       "require": "./dist/index.js",
       "default": "./dist/index.modern.mjs"
     }
   },
-  "source": "src/index.js",
+  "source": "src/index.tsx",
   "engines": {
     "node": ">=10"
   },
   "scripts": {
-    "build": "esbuild src/index.js --bundle --format=cjs --outfile=dist/index.js --platform=browser --external:@blockmate.io/blockmate-js-link --external:react && esbuild src/index.js --bundle --format=esm --outfile=dist/index.modern.mjs --platform=browser --external:@blockmate.io/blockmate-js-link --external:react",
+    "build": "tsc -p tsconfig.json && esbuild src/index.tsx --bundle --format=cjs --outfile=dist/index.js --platform=browser --external:@blockmate.io/blockmate-js-link --external:react && esbuild src/index.tsx --bundle --format=esm --outfile=dist/index.modern.mjs --platform=browser --external:@blockmate.io/blockmate-js-link --external:react",
     "start": "npm run build",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "peerDependencies": {
     "react": "^18.2.0 || ^19.0.0"
   },
   "dependencies": {
-    "@blockmate.io/blockmate-js-link": "^1.0.10"
+    "@blockmate.io/blockmate-js-link": "1.0.11"
   },
   "devDependencies": {
+    "@types/react": "^19.2.2",
     "esbuild": "^0.27.2"
   },
   "files": [
