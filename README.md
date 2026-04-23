@@ -9,6 +9,9 @@ Monorepo for Blockmate Link packages:
 - `js-link/` — vanilla JS core package
 - `react-wrapper/` — React wrapper package
 
+## Integration
+- See respective README files under `js-link` and `react-wrapper` directories.
+
 ## Development
 
 Install deps at repo root:
