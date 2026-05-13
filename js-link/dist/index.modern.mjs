@@ -1815,7 +1815,8 @@ var EVENT_MESSAGES = {
   redirectClose: "redirect-close",
   deposit: "deposit-exchange",
   directDeposit: "deposit-wallet-connect",
-  withdrawal: "withdrawal-exchange"
+  withdrawal: "withdrawal-exchange",
+  directWithdrawal: "withdrawal-wallet-connect"
 };
 var runtimeWindow = window;
 runtimeWindow.Buffer = runtimeWindow.Buffer || import_buffer.Buffer;

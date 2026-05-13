@@ -74,7 +74,7 @@ const YourConnectComponent = () => {
         />
         <div>Test APP</div>
         <button onClick={() => handleOpen(
-          "deposit", // Use "deposit" for deposits or "withdrawal" for withdrawals
+          "deposit", // Use "deposit" / "directDeposit" for deposits or "withdrawal" / "directWithdrawal" for withdrawals
           undefined,
           undefined,
           {

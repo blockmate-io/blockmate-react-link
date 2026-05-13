@@ -58,6 +58,7 @@ const EVENT_MESSAGES = {
   deposit: 'deposit-exchange',
   directDeposit: 'deposit-wallet-connect',
   withdrawal: 'withdrawal-exchange',
+  directWithdrawal: 'withdrawal-wallet-connect',
 } as const
 
 export type LinkMessageType = keyof typeof EVENT_MESSAGES

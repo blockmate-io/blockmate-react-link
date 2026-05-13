@@ -26,7 +26,7 @@ If you want to use this library without a bundler, include the IIFE build from a
 
 document.getElementById("open-button").addEventListener("click", () => {
   BlockmateJSLink.handleOpen(
-      "deposit", // Use "deposit" for deposits or "withdrawal" for withdrawals
+      "deposit", // Use "deposit" / "directDeposit" for deposits or "withdrawal" / "directWithdrawal" for withdrawals
       undefined,
       undefined,
       {
@@ -95,7 +95,7 @@ createLinkModal({
 
 document.getElementById("open-button").addEventListener("click", () => {
   handleOpen(
-    "deposit", // Use "deposit" for deposits or "withdrawal" for withdrawals
+    "deposit", // Use "deposit" / "directDeposit" for deposits or "withdrawal" / "directWithdrawal" for withdrawals
     undefined,
     undefined,
     {

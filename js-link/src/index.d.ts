@@ -37,6 +37,7 @@ declare const EVENT_MESSAGES: {
     readonly deposit: "deposit-exchange";
     readonly directDeposit: "deposit-wallet-connect";
     readonly withdrawal: "withdrawal-exchange";
+    readonly directWithdrawal: "withdrawal-wallet-connect";
 };
 export type LinkMessageType = keyof typeof EVENT_MESSAGES;
 export interface BlockmateLinkGlobal {
