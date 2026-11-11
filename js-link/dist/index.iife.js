@@ -1822,12 +1822,6 @@ var BlockmateJSLink = (() => {
   var import_buffer = __toESM(require_buffer());
   var EVENT_MESSAGES = {
     linkConnect: ``,
-    verifyPhone: `verify-phone`,
-    changePhone: `change-phone`,
-    enableTransfer: `enable-transfer`,
-    transferAssets: `transfer-assets`,
-    cryptoSavings: `crypto-savings`,
-    withdrawAssets: `withdraw-assets`,
     close: "blockmate-iframe-close",
     redirect: "redirect",
     redirectClose: "redirect-close",
@@ -2221,13 +2215,7 @@ var BlockmateJSLink = (() => {
         const filteredUrlParamsArray = urlParamsArray.filter(
           ([, value]) => value !== void 0 && value !== null && value !== ""
         );
-        let urlParams = urlParamsArray.map(([key, value]) => `${key}=${String(value)}`).join("&");
-        if (iframeUrl.includes("?")) {
-          urlParams = `&${urlParams}`;
-        } else if (urlParams.length > 0) {
-          urlParams = `?${urlParams}`;
-        }
-        urlParams = filteredUrlParamsArray.map(([key, value]) => `${key}=${String(value)}`).join("&");
+        let urlParams = filteredUrlParamsArray.map(([key, value]) => `${key}=${String(value)}`).join("&");
         if (iframeUrl.includes("?")) {
           urlParams = urlParams.length > 0 ? `&${urlParams}` : "";
         } else if (urlParams.length > 0) {

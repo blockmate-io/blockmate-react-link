@@ -46,12 +46,6 @@ type BlockmateMessageData = {
 
 const EVENT_MESSAGES = {
   linkConnect: ``,
-  verifyPhone: `verify-phone`,
-  changePhone: `change-phone`,
-  enableTransfer: `enable-transfer`,
-  transferAssets: `transfer-assets`,
-  cryptoSavings: `crypto-savings`,
-  withdrawAssets: `withdraw-assets`,
   close: 'blockmate-iframe-close',
   redirect: 'redirect',
   redirectClose: 'redirect-close',
@@ -384,12 +378,6 @@ export const createLinkModal = ({
       if (maybeOauthConnectedAccount) {
         params.delete(OAUTH_QUERY_PARAM)
         setLocalStorageItem(OAUTH_LOCAL_STORAGE_KEY, maybeOauthConnectedAccount)
-        // // This will redirect the user to the same page without the query param, but with state in localStorage
-        // location.replace(
-        //   `${window.location.origin}${
-        //     window.location.pathname
-        //   }?${params.toString()}`
-        // )
         window.close()
       }
     }, pollingTimeoutMs)
@@ -575,15 +563,7 @@ export const createLinkModal = ({
       const filteredUrlParamsArray = urlParamsArray.filter(
         ([, value]) => value !== undefined && value !== null && value !== ''
       )
-      let urlParams = urlParamsArray
-        .map(([key, value]) => `${key}=${String(value)}`)
-        .join('&')
-      if (iframeUrl.includes('?')) {
-        urlParams = `&${urlParams}`
-      } else if (urlParams.length > 0) {
-        urlParams = `?${urlParams}`
-      }
-      urlParams = filteredUrlParamsArray
+      let urlParams = filteredUrlParamsArray
         .map(([key, value]) => `${key}=${String(value)}`)
         .join('&')
       if (iframeUrl.includes('?')) {

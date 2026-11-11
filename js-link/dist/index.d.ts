@@ -25,12 +25,6 @@ export interface CreateLinkModalOptions {
 }
 declare const EVENT_MESSAGES: {
     readonly linkConnect: "";
-    readonly verifyPhone: "verify-phone";
-    readonly changePhone: "change-phone";
-    readonly enableTransfer: "enable-transfer";
-    readonly transferAssets: "transfer-assets";
-    readonly cryptoSavings: "crypto-savings";
-    readonly withdrawAssets: "withdraw-assets";
     readonly close: "blockmate-iframe-close";
     readonly redirect: "redirect";
     readonly redirectClose: "redirect-close";
